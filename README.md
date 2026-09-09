@@ -1,4 +1,4 @@
-# BrickManager v0.8
+# BrickManager v0.9
 
 Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots und Brickognize-Erkennung. Die Architektur bleibt weitgehend an v0.1 angelehnt.
 Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots, Brickognize-Erkennung, Bounding Box und Farbanalyse.
@@ -127,6 +127,47 @@ Der Rebrickable-Key wird als Umgebungsvariable gespeichert, nicht im Repository:
 Danach ein neues Terminal öffnen. Derselbe Key gilt auch für spätere Rebrickable-Abfragen
 zu Teilen, Sets und Inventaren. Ein im Chat offengelegter Key sollte widerrufen und neu
 erstellt werden.
+
+## v0.9: Auto-Scan
+
+Der Auto-Scan erkennt ein neu eingelegtes Bauteil im ROI und löst erst dann
+den bestehenden Scanablauf aus. Er ersetzt weder den manuellen Snapshot noch
+die vorhandene Brickognize-, Farbfilter- oder Set-Zuordnungslogik.
+
+Im Setup kann `Auto-Scan aktivieren` ein- oder ausgeschaltet werden. Das
+Prüfintervall wird mit `−` und `+` in Ein-Sekunden-Schritten eingestellt
+(Minimum: 0,5 Sekunden). Beide Werte werden direkt in `data/settings.json`
+unter `auto_scan_enabled` und `auto_scan_interval` gespeichert.
+
+### Ersteinrichtung
+
+1. Im Setup Auto-Scan aktivieren und das gewünschte Intervall wählen.
+2. Die Scan-Seite öffnen und den gewünschten ROI einstellen.
+3. Sicherstellen, dass der ROI leer ist, und `ROI speichern` drücken.
+
+Beim Speichern erzeugt die App ein Referenzbild des leeren ROI und legt es als
+`data/snapshots/roi_background_reference.png` ab. Dieses Bild wird beim
+erneuten Öffnen der Scan-Seite wiederverwendet. Nach einer Änderung des ROI
+muss die Referenz bei leerem ROI erneut mit `ROI speichern` aufgenommen werden.
+
+### Ablauf und Anzeige
+
+Der Fortschrittsbalken auf der Scan-Seite zeigt ausschließlich die Zeit bis
+zur nächsten lokalen ROI-Prüfung an, beispielsweise `Nächste Prüfung: 1.2 /
+2.0 s`. Er stellt keinen Fortschritt der Brickognize- oder Rebrickable-Anfrage
+dar.
+
+Bei jeder Prüfung vergleicht der Controller das aktuelle ROI-Bild mit dem
+leeren Referenzbild. Die Differenz wird gegen Helligkeitsänderungen
+normalisiert; mindestens 2 % deutlich veränderte Pixel gelten als möglicher
+Bauteilinhalt. Ein bewegtes Bauteil wird erst nach einem stabilen Folgebild
+gescannt. Während der Erkennung und solange das Bauteil im ROI liegt, sind
+weitere automatische Scans gesperrt. Erst wenn der ROI wieder leer ist, kann
+das nächste Bauteil einen Scan auslösen.
+
+Der Status zeigt zusätzlich die gemessene ROI-Änderung und die
+Auslöseschwelle. Fehlt das Referenzbild, weist die Scan-Seite darauf hin,
+zuerst den leeren ROI zu speichern.
 
 ## Installation Windows
 Empfohlen: Python 3.11.
