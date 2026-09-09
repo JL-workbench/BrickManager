@@ -261,6 +261,8 @@ class ScanScreen(Screen):
             lines.append("Bounding Box: nicht verfügbar")
         if best.color is not None:
             lines.append(f"Farbe: RGB {best.color.rgb}, {best.color.hex}")
+        if best.lego_color is not None:
+            lines.append(f"LEGO-Farbe: {best.lego_color.name}")
         if result.color_error is not None:
             lines.append(f"Farbanalyse: {result.color_error}")
         if len(result.results) > 1:

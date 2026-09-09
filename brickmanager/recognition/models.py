@@ -30,6 +30,7 @@ class BrickRecognition:
     confidence: float
     bounding_box: BoundingBox | None = None
     color: object | None = None
+    lego_color: object | None = None
     category: str | None = None
     image_url: str | None = None
 

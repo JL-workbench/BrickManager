@@ -11,6 +11,7 @@ from brickmanager.vision.color_detection import (
     analyze_color_with_reference,
     crop_bounding_box,
 )
+from brickmanager.services.lego_color_detector import detect_lego_color
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +44,12 @@ def enrich_recognition(
             else None
         )
     if color is not None:
+        try:
+            lego_color = detect_lego_color(color.rgb)[0]
+        except (OSError, ValueError, RuntimeError, IndexError):
+            lego_color = None
         results = [
-            replace(item, color=color) if item is best else item
+            replace(item, color=color, lego_color=lego_color) if item is best else item
             for item in result.results
         ]
         result = replace(result, results=results)

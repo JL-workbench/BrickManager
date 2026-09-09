@@ -25,11 +25,24 @@ Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots, Brickogn
 - Bounding Box aus der Brickognize-Antwort übernehmen und visualisieren
 - robuste RGB-/HEX-Farbanalyse innerhalb der Bounding Box
 - konfigurierbarer Innenrand für den Farbcrop
+- lokale Rebrickable-LEGO-Farbdatenbank mit CIEDE2000-Zuordnung
 - automatische Hintergrundreferenz beim Bestätigen der ROI
 - absolute Differenzmaske mit globaler Helligkeitsnormalisierung
 - Debug-Ausgaben für Referenz-ROI, aktuelles ROI, Differenz und Maske
 
-Noch nicht enthalten: YOLO, AUTO-Scan, Sortierlogik, Farbdatenbank und weitere Online-APIs.
+Noch nicht enthalten: YOLO, AUTO-Scan, Sortierlogik, LEGO-Farbnamenlogik und weitere Online-APIs.
+
+Die lokale Farbdatenbank liegt unter `data/lego_colors.json`. Eine Aktualisierung erfolgt
+explizit mit `REBRICKABLE_API_KEY=<key> python scripts/sync_lego_colors.py`; die normale
+Farberkennung verwendet ausschließlich die lokale Datei.
+
+Der Rebrickable-Key wird als Umgebungsvariable gespeichert, nicht im Repository:
+
+    setx REBRICKABLE_API_KEY "<DEIN_KEY>"
+
+Danach ein neues Terminal öffnen. Derselbe Key gilt auch für spätere Rebrickable-Abfragen
+zu Teilen, Sets und Inventaren. Ein im Chat offengelegter Key sollte widerrufen und neu
+erstellt werden.
 
 ## Installation Windows
 Empfohlen: Python 3.11.

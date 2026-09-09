@@ -1,7 +1,6 @@
 from pathlib import Path
 
 APP_NAME = "BrickManager"
-APP_VERSION = "0.4.0"
 APP_VERSION = "0.5.1"
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -10,6 +9,7 @@ LOG_DIR = DATA_DIR / "logs"
 SETTINGS_FILE = DATA_DIR / "settings.json"
 DATABASE_FILE = DATA_DIR / "brickmanager.db"
 SNAPSHOT_DIR = DATA_DIR / "snapshots"
+LEGO_COLORS_FILE = DATA_DIR / "lego_colors.json"
 
 DEFAULT_SETTINGS = {
     "camera_index": 0,
