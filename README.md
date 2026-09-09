@@ -1,18 +1,20 @@
-# BrickManager v0.1
+# BrickManager v0.2
 
-Erste stabile Windows-Grundlage fuer die spaetere Brick-Sortier-App.
+Stabile Windows-Version mit Kamera-Integration, Auswahl und Rotation. Die Architektur bleibt weitgehend an v0.1 angelehnt.
 
-## v0.1
+## v0.2
 - Kivy-Oberflaeche
 - Navigation: Setup, Sets, Scan, History
 - JSON-Einstellungen
 - SQLite-Grundschema
 - Logging
-- getrennte Module fuer UI, Vision, Recognition, Datenbank und Services
-- noch keine Kamera-Initialisierung beim Start
-- noch keine Online-Erkennung
+- Kameraerkennung auf Windows
+- Kameraauswahl mit gespeicherten Einstellungen
+- Rotation 0°, 90°, 180°, 270°
+- Live-Bild auf der Scan-Seite
+- saubere Kamera-Freigabe beim Wechsel und beim App-Ende
 
-Kamera kommt in v0.2, Brickognize in v0.4. So bleibt die erste Version stabil.
+Noch nicht enthalten: Brickognize, YOLO, Bounding Box, Farberkennung, ROI, Snapshot, AUTO-Scan und Online-API.
 
 ## Installation Windows
 Empfohlen: Python 3.11.
