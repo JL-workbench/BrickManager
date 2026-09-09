@@ -1,6 +1,10 @@
 import pytest
 
-from brickmanager.vision.camera import OpenCVCamera
+from brickmanager.vision.camera import (
+    AndroidKivyCamera,
+    OpenCVCamera,
+    get_camera_factory,
+)
 
 
 class FakeCapture:
@@ -55,3 +59,8 @@ def test_enumerate_devices_lists_available_indexes(monkeypatch):
     monkeypatch.setattr("brickmanager.vision.camera.cv2.VideoCapture", fake_factory)
 
     assert OpenCVCamera.enumerate_devices(4) == [0, 2]
+
+
+def test_camera_factory_keeps_directshow_on_windows_and_uses_android_adapter():
+    assert get_camera_factory("win32") is OpenCVCamera
+    assert get_camera_factory("android") is AndroidKivyCamera

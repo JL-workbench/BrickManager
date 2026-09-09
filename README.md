@@ -178,6 +178,14 @@ Empfohlen: Python 3.11.
     pip install -r requirements.txt
     python main.py
 
+## Android Build
+
+Ein ARM64-Debug-APK wird über den Workflow
+`.github/workflows/android.yml` auf GitHub Actions gebaut. Ein Build startet
+bei einem Push auf `master` oder manuell über **Actions → Android Debug Build →
+Run workflow**. Nach einem erfolgreichen Lauf steht die APK im Artifact
+`BrickManager-android-debug` zum Download bereit.
+
 ## Versionsplan
 - v0.1 Foundation
 - v0.2 Kamera, Kameraauswahl, Rotation

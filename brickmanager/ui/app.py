@@ -19,7 +19,7 @@ from brickmanager.services.set_inventory import (
 )
 from brickmanager.services.rebrickable_cache_service import RebrickableCacheService
 from config import REBRICKABLE_CACHE_FILE
-from brickmanager.vision.camera import OpenCVCamera
+from brickmanager.vision.camera import get_camera_factory
 
 
 class RootLayout(BoxLayout):
@@ -35,7 +35,7 @@ class BrickManagerApp(App):
         self.settings = Settings()
         self.database = Database()
         self.database.initialize()
-        self.camera_factory = OpenCVCamera
+        self.camera_factory = get_camera_factory()
         self.recognizer = BrickognizeRecognizer()
         self.rebrickable_cache_service = RebrickableCacheService(REBRICKABLE_CACHE_FILE)
         self.set_inventory_service = SetInventoryService(

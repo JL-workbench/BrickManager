@@ -54,3 +54,8 @@ data/snapshots/
 *.log
 .idea/
 .env
+.buildozer/
+build/
+bin/
+*.apk
+*.aab

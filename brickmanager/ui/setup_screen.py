@@ -12,7 +12,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 
-from brickmanager.vision.camera import OpenCVCamera
+from brickmanager.vision.camera import get_camera_factory
 from brickmanager.services.lego_color_database import ColorDatabase, ColorDatabaseError
 from config import LEGO_COLORS_FILE
 
@@ -21,7 +21,7 @@ class SetupScreen(Screen):
     def __init__(self, settings, camera_factory=None, **kwargs):
         super().__init__(name="setup", **kwargs)
         self.settings = settings
-        self.camera_factory = camera_factory or OpenCVCamera
+        self.camera_factory = camera_factory or get_camera_factory()
         self.is_searching = False
         root = BoxLayout(orientation="vertical", padding=dp(15), spacing=dp(10))
         root.add_widget(

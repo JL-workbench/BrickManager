@@ -2,18 +2,19 @@ from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
 
-from brickmanager.vision.camera import OpenCVCamera
+from brickmanager.vision.camera import get_camera_factory
 from brickmanager.vision.image_processing import prepare_frame_for_kivy
 
 
 class CameraWidget(Image):
     def __init__(self, camera_factory=None, **kwargs):
         super().__init__(**kwargs)
-        self.camera_factory = camera_factory or OpenCVCamera
+        self.camera_factory = camera_factory or get_camera_factory()
         self.camera = None
         self.camera_index = 0
         self.rotation = 0
         self._update_event = None
+        self._permission_retry_event = None
         self.status_callback = None
         self.latest_frame = None
         self.allow_stretch = True
@@ -32,7 +33,14 @@ class CameraWidget(Image):
         self.rotation = int(rotation)
         camera = self.camera_factory(self.camera_index)
         if not camera.open():
-            self._status(f"Kamera {self.camera_index} konnte nicht geöffnet werden.")
+            self._status(
+                getattr(camera, "last_error", None)
+                or f"Kamera {self.camera_index} konnte nicht geöffnet werden."
+            )
+            if getattr(camera, "permission_pending", False):
+                self._permission_retry_event = Clock.schedule_once(
+                    lambda *_: self.start(self.camera_index, self.rotation), 1.5
+                )
             self.camera = None
             return False
 
@@ -72,6 +80,9 @@ class CameraWidget(Image):
         self.texture_size = texture.size
 
     def stop(self):
+        if self._permission_retry_event is not None:
+            self._permission_retry_event.cancel()
+            self._permission_retry_event = None
         if self._update_event is not None:
             self._update_event.cancel()
             self._update_event = None
