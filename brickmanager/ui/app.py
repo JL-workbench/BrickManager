@@ -11,6 +11,7 @@ from brickmanager.ui.menu import NavigationBar
 from brickmanager.ui.scan_screen import ScanScreen
 from brickmanager.ui.sets_screen import SetsScreen
 from brickmanager.ui.setup_screen import SetupScreen
+from brickmanager.recognition.brickognize import BrickognizeRecognizer
 from brickmanager.vision.camera import OpenCVCamera
 
 
@@ -28,6 +29,7 @@ class BrickManagerApp(App):
         self.database = Database()
         self.database.initialize()
         self.camera_factory = OpenCVCamera
+        self.recognizer = BrickognizeRecognizer()
 
     def build(self):
         root = RootLayout(orientation="vertical")
@@ -39,7 +41,11 @@ class BrickManagerApp(App):
         )
         manager.add_widget(SetsScreen(self.database))
         manager.add_widget(
-            ScanScreen(self.settings, camera_factory=self.camera_factory)
+            ScanScreen(
+                self.settings,
+                camera_factory=self.camera_factory,
+                recognizer=self.recognizer,
+            )
         )
         manager.add_widget(HistoryScreen(self.database))
         navigation.screen_manager = manager

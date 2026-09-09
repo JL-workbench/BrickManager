@@ -2,7 +2,7 @@
 
 ## Projektziel
 
-BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen. Ziel von v0.3 ist die stabile Windows-Kamera-Integration mit ROI-Auswahl und Snapshot, weiterhin ohne Brick-Erkennung oder andere spätere Funktionen.
+BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen. Ziel von v0.4 ist die stabile Windows-Kamera-Integration mit ROI, Snapshot und gekapselter Brickognize-Erkennung.
 
 ## Grundregeln
 
@@ -14,14 +14,14 @@ BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen
 - Es darf nie mehr als eine offene Kamera-Instanz existieren.
 - Die vorhandene JSON-Konfiguration bleibt erhalten. Mindestens `camera_index` und `rotation` werden weiter verwendet.
 - Die Rotation bleibt im Bildverarbeitungs-/Render-Pfad und wird nicht in das Kamera-Backend eingebaut.
-- Keine Brickognize-, Online-, YOLO-, AUTO-Scan- oder Inventar-Funktionen in v0.3.
+- Keine YOLO-, AUTO-Scan- oder Inventar-Funktionen in v0.4. Brickognize bleibt ausschließlich in der Recognition-Schicht.
 - Keine unnötige Neuorganisation oder große Umstrukturierung.
 - Fehler werden sauber in der GUI angezeigt und dürfen keine Abstürze verursachen.
 
 ## Qualitätsrichtlinien
 
 - Nur notwendige Dateien ändern.
-- Kein Aufwand für Funktionen, die noch nicht Teil von v0.3 sind.
+- Kein Aufwand für Funktionen, die noch nicht Teil von v0.4 sind.
 - Saubere Ressourcenverwaltung und idempotente `close()`/`stop()`-Methoden.
 - UI soll nicht blockieren; Kamera-Suche darf nicht dauerhaft blockieren.
 - Tests sollen das echte Verhalten prüfen, nicht nur Mock-Implementierungen.
@@ -30,5 +30,5 @@ BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen
 
 - `brickmanager/ui/` enthält GUI, Screen-Lifecycle und Kivy-Widgets.
 - `brickmanager/vision/` enthält Kamera- und Bildverarbeitungslogik.
-- `brickmanager/recognition/`, `database/`, `services/` bleiben in v0.3 grundsätzlich unverändert.
+- `brickmanager/database/` und `brickmanager/services/` bleiben in v0.4 grundsätzlich unverändert. `brickmanager/recognition/` enthält die gekapselte Brickognize-API-Schicht.
 - Die Datenbank und Settings-Schema werden nicht unnötig erweitert.
