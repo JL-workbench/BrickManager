@@ -39,6 +39,7 @@ class RecognitionResult:
     success: bool
     results: list[BrickRecognition]
     error: str | None = None
+    color_error: str | None = None
 
     @property
     def best_match(self) -> BrickRecognition | None:

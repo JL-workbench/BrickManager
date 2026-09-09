@@ -1,4 +1,4 @@
-Ziel von v0.5 ist die stabile Windows-Kamera-Integration mit ROI, Snapshot, gekapselter Brickognize-Erkennung, Bounding Box und einfacher Farbanalyse.
+Ziel von v0.5.1 ist die stabile Windows-Kamera-Integration mit ROI, Snapshot, gekapselter Brickognize-Erkennung, Bounding Box und hintergrundgestützter Farbanalyse.
 # AGENTS.md
 
 ## Projektziel
@@ -16,7 +16,7 @@ BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen
 - Die vorhandene JSON-Konfiguration bleibt erhalten. Mindestens `camera_index` und `rotation` werden weiter verwendet.
 - Die Rotation bleibt im Bildverarbeitungs-/Render-Pfad und wird nicht in das Kamera-Backend eingebaut.
 - Keine YOLO-, AUTO-Scan- oder Inventar-Funktionen in v0.4. Brickognize bleibt ausschließlich in der Recognition-Schicht.
-- Keine YOLO-, AUTO-Scan-, Sortier- oder Inventar-Funktionen in v0.5. Brickognize bleibt ausschließlich in der Recognition-Schicht; Farbanalyse nutzt nur dessen Bounding Box.
+- Keine YOLO-, AUTO-Scan-, Sortier- oder Inventar-Funktionen in v0.5.1. Brickognize bleibt ausschließlich in der Recognition-Schicht; Farbanalyse nutzt nur dessen Bounding Box und die beim ROI-Bestätigen erzeugte Hintergrundreferenz.
 - Keine unnötige Neuorganisation oder große Umstrukturierung.
 - Fehler werden sauber in der GUI angezeigt und dürfen keine Abstürze verursachen.
 
@@ -24,7 +24,7 @@ BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen
 
 - Nur notwendige Dateien ändern.
 - Kein Aufwand für Funktionen, die noch nicht Teil von v0.4 sind.
-- Kein Aufwand für Funktionen, die noch nicht Teil von v0.5 sind.
+- Kein Aufwand für Funktionen, die noch nicht Teil von v0.5.1 sind.
 - Saubere Ressourcenverwaltung und idempotente `close()`/`stop()`-Methoden.
 - UI soll nicht blockieren; Kamera-Suche darf nicht dauerhaft blockieren.
 - Tests sollen das echte Verhalten prüfen, nicht nur Mock-Implementierungen.

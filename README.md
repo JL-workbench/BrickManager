@@ -1,5 +1,5 @@
 # BrickManager v0.4
-# BrickManager v0.5
+# BrickManager v0.5.1
 
 Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots und Brickognize-Erkennung. Die Architektur bleibt weitgehend an v0.1 angelehnt.
 Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots, Brickognize-Erkennung, Bounding Box und Farbanalyse.
@@ -25,6 +25,9 @@ Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots, Brickogn
 - Bounding Box aus der Brickognize-Antwort übernehmen und visualisieren
 - robuste RGB-/HEX-Farbanalyse innerhalb der Bounding Box
 - konfigurierbarer Innenrand für den Farbcrop
+- automatische Hintergrundreferenz beim Bestätigen der ROI
+- absolute Differenzmaske mit globaler Helligkeitsnormalisierung
+- Debug-Ausgaben für Referenz-ROI, aktuelles ROI, Differenz und Maske
 
 Noch nicht enthalten: YOLO, AUTO-Scan, Sortierlogik, Farbdatenbank und weitere Online-APIs.
 

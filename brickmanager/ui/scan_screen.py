@@ -19,6 +19,8 @@ from brickmanager.recognition.models import RecognitionResult
 from brickmanager.ui.camera_widget import CameraWidget
 from brickmanager.ui.roi_overlay import RoiOverlay
 from brickmanager.vision.image_processing import save_snapshot
+from brickmanager.vision.image_processing import prepare_snapshot_frame
+from brickmanager.vision.color_detection import create_background_reference
 from brickmanager.vision.recognition_processing import enrich_recognition
 from config import SNAPSHOT_DIR
 
@@ -30,6 +32,7 @@ class ScanScreen(Screen):
         self.recognizer = recognizer or BrickognizeRecognizer()
         self.selected_image_path = None
         self.recognition_running = False
+        self.background_reference = None
         self.camera_widget = CameraWidget(
             camera_factory=camera_factory, size_hint=(1, 1)
         )
@@ -133,7 +136,20 @@ class ScanScreen(Screen):
     def save_roi(self, *_):
         self.settings.set("roi", dict(self.current_roi))
         self.settings.save()
-        self.status.text = "ROI gespeichert."
+        frame = self.camera_widget.get_latest_frame()
+        if frame is None:
+            self.background_reference = None
+            self.status.text = "ROI gespeichert, Referenzbild nicht verfügbar."
+            return
+        self.status.text = "ROI ausgewählt. Referenzbild wird aufgenommen..."
+        reference_frame = prepare_snapshot_frame(
+            frame, self.camera_widget.rotation, self.current_roi
+        )
+        self.background_reference = create_background_reference(reference_frame)
+        if self.background_reference is None:
+            self.status.text = "Referenzbild konnte nicht aufgenommen werden."
+            return
+        self.status.text = "Referenzbild aufgenommen. LEGO-Teil analysierbar."
 
     def reset_roi(self, *_):
         self.current_roi = {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}
@@ -212,7 +228,9 @@ class ScanScreen(Screen):
 
     def _recognize_in_background(self, image_path):
         result = self.recognizer.identify_part(image_path)
-        result, debug_path = enrich_recognition(image_path, result)
+        result, debug_path = enrich_recognition(
+            image_path, result, reference=self.background_reference
+        )
         Clock.schedule_once(lambda *_: self._display_recognition(result, debug_path), 0)
 
     def _display_recognition(self, result: RecognitionResult, debug_path=None):
@@ -243,6 +261,8 @@ class ScanScreen(Screen):
             lines.append("Bounding Box: nicht verfügbar")
         if best.color is not None:
             lines.append(f"Farbe: RGB {best.color.rgb}, {best.color.hex}")
+        if result.color_error is not None:
+            lines.append(f"Farbanalyse: {result.color_error}")
         if len(result.results) > 1:
             lines.append(
                 "Weitere Treffer: "

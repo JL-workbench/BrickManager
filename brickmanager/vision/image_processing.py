@@ -22,9 +22,14 @@ def save_snapshot(frame, path, rotation=0, roi=None):
     if frame is None:
         return False
 
+    snapshot = prepare_snapshot_frame(frame, rotation, roi)
+    return bool(cv2.imwrite(str(path), snapshot))
+
+
+def prepare_snapshot_frame(frame, rotation=0, roi=None):
     snapshot = rotate_image(frame, rotation)
     if roi is not None:
         from brickmanager.vision.roi import apply_roi
 
         snapshot = apply_roi(snapshot, roi)
-    return bool(cv2.imwrite(str(path), snapshot))
+    return snapshot

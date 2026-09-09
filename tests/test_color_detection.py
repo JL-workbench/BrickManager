@@ -2,7 +2,12 @@ import cv2
 import numpy as np
 
 from brickmanager.recognition.models import BoundingBox
-from brickmanager.vision.color_detection import analyze_color, crop_bounding_box
+from brickmanager.vision.color_detection import (
+    analyze_color,
+    analyze_color_with_reference,
+    create_background_reference,
+    crop_bounding_box,
+)
 
 
 def box():
@@ -46,3 +51,47 @@ def test_bbox_is_scaled_and_clamped_to_actual_image():
     crop = crop_bounding_box(image, bounding_box, margin=0)
 
     assert crop.shape[:2] == (10, 20)
+
+
+def test_reference_difference_keeps_object_and_removes_background():
+    reference = np.full((10, 10, 3), [80, 80, 80], dtype=np.uint8)
+    current = reference.copy()
+    current[3:7, 3:7] = [0, 0, 255]
+
+    color, difference, mask, error = analyze_color_with_reference(
+        current, box(), create_background_reference(reference), margin=0, threshold=20
+    )
+
+    assert error is None
+    assert difference is not None
+    assert mask[3, 3] == 255
+    assert mask[0, 0] == 0
+    assert color.rgb == (255, 0, 0)
+
+
+def test_reference_ignores_small_pixel_changes():
+    reference = np.full((10, 10, 3), [80, 80, 80], dtype=np.uint8)
+    current = reference.copy()
+    current[4, 4] = [85, 85, 85]
+
+    color, _, mask, error = analyze_color_with_reference(
+        current, box(), create_background_reference(reference), margin=0, threshold=20
+    )
+
+    assert color is None
+    assert mask.max() == 0
+    assert error == "Not enough object pixels detected."
+
+
+def test_reference_dimension_change_is_reported():
+    reference = create_background_reference(np.zeros((10, 10, 3), dtype=np.uint8))
+    current = np.zeros((8, 10, 3), dtype=np.uint8)
+
+    color, difference, mask, error = analyze_color_with_reference(
+        current, box(), reference
+    )
+
+    assert color is None
+    assert difference is None
+    assert mask is None
+    assert error == "Image dimensions changed."
