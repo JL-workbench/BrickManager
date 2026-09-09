@@ -9,11 +9,14 @@ from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import Screen
 
+from brickmanager.services.color_filter import color_is_visible, is_filter_active
+
 
 class HistoryScreen(Screen):
-    def __init__(self, assignment_service, **kwargs):
+    def __init__(self, assignment_service, settings=None, **kwargs):
         super().__init__(name="history", **kwargs)
         self.assignment_service = assignment_service
+        self.settings = settings
         self.root = BoxLayout(orientation="vertical", padding=dp(15), spacing=dp(10))
         self.add_widget(self.root)
         self.refresh()
@@ -27,6 +30,10 @@ class HistoryScreen(Screen):
         self.root.add_widget(
             Label(text="History", font_size=dp(26), size_hint_y=None, height=dp(45))
         )
+        if self.settings is not None and is_filter_active(self.settings):
+            self.root.add_widget(
+                Label(text="Farbfilter aktiv", size_hint_y=None, height=dp(24))
+            )
         content = BoxLayout(orientation="vertical", size_hint_y=None, spacing=dp(6))
         content.bind(minimum_height=content.setter("height"))
         entries = self.assignment_service.list_history()
@@ -37,6 +44,10 @@ class HistoryScreen(Screen):
                 )
             )
         for entry in entries:
+            if self.settings is not None and not color_is_visible(
+                self.settings, entry["color_id"]
+            ):
+                continue
             content.add_widget(self._build_history_row(entry))
         scroll = ScrollView()
         scroll.add_widget(content)

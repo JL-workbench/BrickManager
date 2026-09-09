@@ -292,6 +292,7 @@ class PartAssignmentService:
         lego_design_id=None,
         image_path=None,
         timestamp=None,
+        allow_assignment=True,
     ):
         database = self.database.connect()
         with database:
@@ -304,6 +305,8 @@ class PartAssignmentService:
                     ORDER BY managed_sets.priority LIMIT 1""",
                 (str(part_num), int(color_id)),
             ).fetchone()
+            if not allow_assignment:
+                item = None
             if item is not None:
                 database.execute(
                     "UPDATE managed_set_inventory SET quantity_found = quantity_found + 1 WHERE id = ?",
@@ -332,7 +335,7 @@ class PartAssignmentService:
             return {
                 "assigned": False,
                 "set_id": None,
-                "reason": "no_demand",
+                "reason": "no_demand" if allow_assignment else "filtered_color",
                 "scan_id": cursor.lastrowid,
             }
         found = item["quantity_found"] + 1

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 APP_NAME = "BrickManager"
-APP_VERSION = "0.8"
+APP_VERSION = "0.8.1"
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -18,6 +18,9 @@ DEFAULT_SETTINGS = {
     "roi": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0},
     "auto_mode": False,
     "manufacturer": "LEGO",
+    "color_filter_enabled": False,
+    "selected_color_ids": [],
+    "sort_filtered_parts": False,
 }
 
 for directory in (DATA_DIR, LOG_DIR, SNAPSHOT_DIR):

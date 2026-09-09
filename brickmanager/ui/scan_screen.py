@@ -22,6 +22,7 @@ from brickmanager.vision.image_processing import save_snapshot
 from brickmanager.vision.image_processing import prepare_snapshot_frame
 from brickmanager.vision.color_detection import create_background_reference
 from brickmanager.vision.recognition_processing import enrich_recognition
+from brickmanager.services.color_filter import color_is_visible, sort_filtered_parts
 from config import SNAPSHOT_DIR
 
 
@@ -280,6 +281,7 @@ class ScanScreen(Screen):
             lines.append(f"LEGO Element-ID: {', '.join(all_element_ids) or '?'}")
             if self.assignment_service is not None and best.part_id:
                 try:
+                    is_visible = color_is_visible(self.settings, lego_color.color_id)
                     assignment = self.assignment_service.assign_part(
                         best.part_id,
                         lego_color.color_id,
@@ -288,7 +290,12 @@ class ScanScreen(Screen):
                         lego_element_id=element_id,
                         color_name=lego_color.name,
                         image_path=self.selected_image_path,
+                        allow_assignment=is_visible
+                        or sort_filtered_parts(self.settings),
                     )
+                    if not is_visible:
+                        lines.append("Farbe nicht im Filter")
+                        self._show_filtered_color_notice(lego_color.name)
                     if assignment["assigned"]:
                         lines.append(
                             f"Zuordnung: {best.part_id} - {lego_color.name} -> Set {assignment['set_num']}"
@@ -308,6 +315,24 @@ class ScanScreen(Screen):
                 )
             )
         self.status.text = "\n".join(lines)
+
+    def _show_filtered_color_notice(self, color_name):
+        message = (
+            f"Das erkannte Bauteil hat die Farbe: {color_name}\n"
+            "Diese Farbe ist aktuell nicht ausgewählt."
+        )
+        content = BoxLayout(orientation="vertical", padding=dp(12), spacing=dp(10))
+        content.add_widget(Label(text=message))
+        dismiss = Button(text="OK", size_hint_y=None, height=dp(42))
+        content.add_widget(dismiss)
+        popup = Popup(
+            title="Farbe nicht im Filter",
+            content=content,
+            size_hint=(0.75, None),
+            height=dp(180),
+        )
+        dismiss.bind(on_release=popup.dismiss)
+        popup.open()
 
     def on_enter(self, *args):
         self.current_roi = dict(self.settings.get("roi", self.current_roi))

@@ -100,6 +100,22 @@ einmal nach diesem Abstand erneut versucht. Für eine spätere Wartungsaktion
 kann `RebrickableCacheService.clear()` alle Rebrickable-Daten löschen; ein
 erneuter Bedarf lädt sie anschließend wieder von der API.
 
+## v0.8.1: Globaler Farbfilter
+
+Der Setup-Bereich speichert den globalen Farbfilter in `data/settings.json`:
+`color_filter_enabled`, `selected_color_ids` und `sort_filtered_parts`.
+`selected_color_ids` enthält ausschließlich Rebrickable Color IDs. Standard ist
+`Alle Farben`, daher bleibt das bisherige Verhalten unverändert.
+
+Die Farberkennung bestimmt weiterhin die tatsächliche part-spezifische Farbe.
+Erst danach prüft der Scan die Filtereinstellung. Außerhalb des Filters zeigt
+die App eine Warnung. Bei deaktiviertem `sort_filtered_parts` bleibt der Scan
+in der History erhalten, erhöht aber keine Set-Menge; bei aktiviertem Schalter
+gilt die bestehende automatische Set-Priorität unverändert weiter.
+
+Sets und History verwenden den Filter ausschließlich für ihre Anzeige.
+Ausgeblendete Inventar- und History-Daten werden weder gelöscht noch verändert.
+
 Die lokale Farbdatenbank liegt unter `data/lego_colors.json`. Eine Aktualisierung erfolgt
 explizit mit `REBRICKABLE_API_KEY=<key> python scripts/sync_lego_colors.py`; die normale
 Farberkennung verwendet ausschließlich die lokale Datei.

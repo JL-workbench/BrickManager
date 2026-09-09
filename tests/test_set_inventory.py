@@ -322,3 +322,43 @@ def test_reassign_rejects_a_target_with_no_remaining_demand(tmp_path):
     assert inventory.get_inventory("A-1")[0]["quantity_found"] == 1
     assert inventory.get_inventory("B-1")[0]["quantity_found"] == 1
     database.close()
+
+
+def test_filtered_scan_is_kept_in_history_without_changing_set_quantity(tmp_path):
+    database = Database(tmp_path / "sets.db")
+    database.initialize()
+    inventory = SetInventoryService(database)
+    inventory.store_set(
+        {"set_num": "A-1", "name": "Set A"},
+        [{"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 1}],
+    )
+    assignments = PartAssignmentService(database)
+
+    result = assignments.assign_part(
+        "3001", 4, color_name="Red", allow_assignment=False
+    )
+
+    assert result["assigned"] is False
+    assert result["reason"] == "filtered_color"
+    assert inventory.get_inventory("A-1")[0]["quantity_found"] == 0
+    assert assignments.list_history()[0]["assigned_set_id"] is None
+    database.close()
+
+
+def test_filter_override_keeps_normal_priority_assignment(tmp_path):
+    database = Database(tmp_path / "sets.db")
+    database.initialize()
+    inventory = SetInventoryService(database)
+    inventory.store_set(
+        {"set_num": "A-1", "name": "Set A"},
+        [{"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 1}],
+    )
+
+    result = PartAssignmentService(database).assign_part(
+        "3001", 4, color_name="Red", allow_assignment=True
+    )
+
+    assert result["assigned"] is True
+    assert result["set_num"] == "A-1"
+    assert inventory.get_inventory("A-1")[0]["quantity_found"] == 1
+    database.close()

@@ -53,7 +53,9 @@ class BrickManagerApp(App):
             SetupScreen(self.settings, camera_factory=self.camera_factory)
         )
         manager.add_widget(
-            SetsScreen(self.set_inventory_service, self.part_assignment_service)
+            SetsScreen(
+                self.set_inventory_service, self.part_assignment_service, self.settings
+            )
         )
         manager.add_widget(
             ScanScreen(
@@ -63,7 +65,7 @@ class BrickManagerApp(App):
                 assignment_service=self.part_assignment_service,
             )
         )
-        manager.add_widget(HistoryScreen(self.part_assignment_service))
+        manager.add_widget(HistoryScreen(self.part_assignment_service, self.settings))
         navigation.screen_manager = manager
         root.add_widget(manager)
         self.screen_manager = manager

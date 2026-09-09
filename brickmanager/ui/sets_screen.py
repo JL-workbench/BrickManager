@@ -12,17 +12,23 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
 
 from brickmanager.services.set_inventory import SetInventoryError
+from brickmanager.services.color_filter import color_is_visible, is_filter_active
 
 
 class SetsScreen(Screen):
-    def __init__(self, inventory_service, assignment_service, **kwargs):
+    def __init__(self, inventory_service, assignment_service, settings=None, **kwargs):
         super().__init__(name="sets", **kwargs)
         self.inventory_service = inventory_service
         self.assignment_service = assignment_service
+        self.settings = settings
         self.root = BoxLayout(orientation="vertical", padding=dp(15), spacing=dp(10))
         self.root.add_widget(
             Label(text="Sets", font_size=dp(26), size_hint_y=None, height=dp(45))
         )
+        if self.settings is not None and is_filter_active(self.settings):
+            self.root.add_widget(
+                Label(text="Farbfilter aktiv", size_hint_y=None, height=dp(24))
+            )
         self.add_widget(self.root)
         self.show_set_list()
 
@@ -218,6 +224,10 @@ class SetsScreen(Screen):
         content = BoxLayout(orientation="vertical", size_hint_y=None, spacing=dp(6))
         content.bind(minimum_height=content.setter("height"))
         for item in self.inventory_service.get_inventory(set_num):
+            if self.settings is not None and not color_is_visible(
+                self.settings, item["color_id"]
+            ):
+                continue
             row = BoxLayout(size_hint_y=None, height=dp(72), spacing=dp(8))
             if item["part_image_url"]:
                 row.add_widget(
