@@ -183,11 +183,19 @@ class SetInventoryService:
     def delete_set(self, set_num):
         database = self.database.connect()
         with database:
+            set_row = database.execute(
+                "SELECT id FROM managed_sets WHERE set_num = ?", (str(set_num),)
+            ).fetchone()
+            if set_row is None:
+                return {"deleted": False, "reason": "not_found"}
+            database.execute(
+                """UPDATE part_assignments SET set_id = NULL, inventory_item_id = NULL
+                WHERE set_id = ?""",
+                (set_row["id"],),
+            )
             cursor = database.execute(
                 "DELETE FROM managed_sets WHERE set_num = ?", (str(set_num),)
             )
-            if cursor.rowcount == 0:
-                return {"deleted": False, "reason": "not_found"}
         return {"deleted": True}
 
     def set_priority_order(self, set_numbers):
@@ -261,7 +269,16 @@ class PartAssignmentService:
         self.database = database
 
     def assign_part(
-        self, part_num, color_id, confidence=None, delta_e=None, lego_element_id=None
+        self,
+        part_num,
+        color_id,
+        confidence=None,
+        delta_e=None,
+        lego_element_id=None,
+        color_name=None,
+        lego_design_id=None,
+        image_path=None,
+        timestamp=None,
     ):
         database = self.database.connect()
         with database:
@@ -274,29 +291,41 @@ class PartAssignmentService:
                     ORDER BY managed_sets.priority LIMIT 1""",
                 (str(part_num), int(color_id)),
             ).fetchone()
-            if item is None:
-                return {"assigned": False, "set_id": None, "reason": "no_demand"}
-            database.execute(
-                "UPDATE managed_set_inventory SET quantity_found = quantity_found + 1 WHERE id = ?",
-                (item["id"],),
-            )
-            database.execute(
+            if item is not None:
+                database.execute(
+                    "UPDATE managed_set_inventory SET quantity_found = quantity_found + 1 WHERE id = ?",
+                    (item["id"],),
+                )
+            cursor = database.execute(
                 """INSERT INTO part_assignments(
-                    part_num, color_id, set_id, inventory_item_id, confidence, delta_e, lego_element_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    assigned_at, part_num, color_id, color_name, set_id, inventory_item_id,
+                    confidence, delta_e, lego_design_id, lego_element_id, image_path
+                ) VALUES (COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
+                    timestamp,
                     str(part_num),
                     int(color_id),
-                    item["set_id"],
-                    item["id"],
+                    color_name,
+                    item["set_id"] if item else None,
+                    item["id"] if item else None,
                     confidence,
                     delta_e,
+                    lego_design_id,
                     lego_element_id,
+                    str(image_path) if image_path else None,
                 ),
             )
+        if item is None:
+            return {
+                "assigned": False,
+                "set_id": None,
+                "reason": "no_demand",
+                "scan_id": cursor.lastrowid,
+            }
         found = item["quantity_found"] + 1
         return {
             "assigned": True,
+            "scan_id": cursor.lastrowid,
             "set_id": item["set_id"],
             "set_num": item["set_num"],
             "part_num": str(part_num),
@@ -304,6 +333,81 @@ class PartAssignmentService:
             "quantity_found": found,
             "quantity_required": item["quantity_required"],
             "quantity_remaining": item["quantity_required"] - found,
+        }
+
+    def list_history(self):
+        rows = database = (
+            self.database.connect()
+            .execute(
+                """SELECT part_assignments.id AS scan_id, assigned_at AS timestamp,
+                part_num, color_id, color_name, lego_design_id, lego_element_id,
+                image_path, set_id AS assigned_set_id, managed_sets.set_num AS assigned_set_num,
+                managed_sets.name AS assigned_set_name, confidence, delta_e
+                FROM part_assignments LEFT JOIN managed_sets ON managed_sets.id = part_assignments.set_id
+                WHERE undone = 0 ORDER BY datetime(assigned_at) DESC, part_assignments.id DESC"""
+            )
+            .fetchall()
+        )
+        return [dict(row) for row in rows]
+
+    def get_reassignment_targets(self, scan_id):
+        rows = (
+            self.database.connect()
+            .execute(
+                """SELECT managed_sets.id AS set_id, managed_sets.set_num, managed_sets.name,
+                quantity_required, quantity_found,
+                managed_sets.id = part_assignments.set_id AS is_current
+                FROM part_assignments JOIN managed_set_inventory
+                ON managed_set_inventory.part_num = part_assignments.part_num
+                AND managed_set_inventory.color_id = part_assignments.color_id
+                JOIN managed_sets ON managed_sets.id = managed_set_inventory.set_id
+                WHERE part_assignments.id = ? AND part_assignments.undone = 0
+                ORDER BY managed_sets.priority""",
+                (int(scan_id),),
+            )
+            .fetchall()
+        )
+        targets = [dict(row) for row in rows]
+        for target in targets:
+            target["is_current"] = bool(target["is_current"])
+        return targets
+
+    def reassign_part(self, scan_id, target_set_id):
+        database = self.database.connect()
+        with database:
+            scan = database.execute(
+                "SELECT * FROM part_assignments WHERE id = ? AND undone = 0",
+                (int(scan_id),),
+            ).fetchone()
+            if scan is None:
+                return {"reassigned": False, "reason": "scan_not_found"}
+            target = database.execute(
+                """SELECT managed_set_inventory.id, managed_sets.set_num FROM managed_set_inventory
+                JOIN managed_sets ON managed_sets.id = managed_set_inventory.set_id
+                WHERE managed_set_inventory.set_id = ? AND part_num = ? AND color_id = ?""",
+                (int(target_set_id), scan["part_num"], scan["color_id"]),
+            ).fetchone()
+            if target is None:
+                return {"reassigned": False, "reason": "invalid_target"}
+            if scan["set_id"] == target_set_id:
+                return {"reassigned": False, "reason": "already_assigned"}
+            if scan["inventory_item_id"] is not None:
+                database.execute(
+                    "UPDATE managed_set_inventory SET quantity_found = MAX(quantity_found - 1, 0) WHERE id = ?",
+                    (scan["inventory_item_id"],),
+                )
+            database.execute(
+                "UPDATE managed_set_inventory SET quantity_found = quantity_found + 1 WHERE id = ?",
+                (target["id"],),
+            )
+            database.execute(
+                "UPDATE part_assignments SET set_id = ?, inventory_item_id = ? WHERE id = ?",
+                (int(target_set_id), target["id"], int(scan_id)),
+            )
+        return {
+            "reassigned": True,
+            "set_id": int(target_set_id),
+            "set_num": target["set_num"],
         }
 
     def undo_last_assignment(self):

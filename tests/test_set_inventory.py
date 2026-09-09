@@ -142,7 +142,10 @@ def test_assignment_uses_stored_priority_and_part_color_pair(tmp_path):
 
     assert first["set_num"] == "A-1"
     assert second["set_num"] == "B-1"
-    assert wrong_color == {"assigned": False, "set_id": None, "reason": "no_demand"}
+    assert wrong_color["assigned"] is False
+    assert wrong_color["set_id"] is None
+    assert wrong_color["reason"] == "no_demand"
+    assert wrong_color["scan_id"] is not None
     assert inventory.get_inventory("B-1")[0]["quantity_found"] == 1
     database.close()
 
@@ -212,3 +215,80 @@ def test_delete_set_removes_its_inventory(tmp_path):
     assert service.list_sets() == []
     assert service.get_inventory("A-1") == []
     database.close()
+
+
+def test_delete_set_keeps_assigned_history_as_unassigned(tmp_path):
+    database = Database(tmp_path / "sets.db")
+    database.initialize()
+    inventory = SetInventoryService(database)
+    inventory.store_set(
+        {"set_num": "A-1", "name": "Set A"},
+        [{"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 1}],
+    )
+    assignments = PartAssignmentService(database)
+    assignments.assign_part("3001", 4, color_name="Red")
+
+    assert inventory.delete_set("A-1") == {"deleted": True}
+    history_entry = assignments.list_history()[0]
+    assert history_entry["assigned_set_id"] is None
+    assert history_entry["assigned_set_num"] is None
+    database.close()
+
+
+def test_history_records_assigned_and_unassigned_scans_in_timestamp_order(tmp_path):
+    database = Database(tmp_path / "sets.db")
+    database.initialize()
+    inventory = SetInventoryService(database)
+    inventory.store_set(
+        {"set_num": "A-1", "name": "Set A"},
+        [{"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 1}],
+    )
+    assignments = PartAssignmentService(database)
+    assignments.assign_part(
+        "3001", 4, color_name="Red", timestamp="2026-09-09 20:31:00"
+    )
+    assignments.assign_part(
+        "3001", 7, color_name="Blue", timestamp="2026-09-09 20:32:00"
+    )
+
+    history = assignments.list_history()
+
+    assert [(entry["part_num"], entry["assigned_set_num"]) for entry in history] == [
+        ("3001", None),
+        ("3001", "A-1"),
+    ]
+    assert history[0]["color_name"] == "Blue"
+    database.close()
+
+
+def test_reassign_moves_exactly_one_history_part_and_persists(tmp_path):
+    path = tmp_path / "sets.db"
+    database = Database(path)
+    database.initialize()
+    inventory = SetInventoryService(database)
+    for set_num in ("A-1", "B-1"):
+        inventory.store_set(
+            {"set_num": set_num, "name": set_num},
+            [{"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 1}],
+        )
+    assignments = PartAssignmentService(database)
+    scan = assignments.assign_part("3001", 4, color_name="Red")
+    targets = assignments.get_reassignment_targets(scan["scan_id"])
+
+    assert [target["set_num"] for target in targets] == ["A-1", "B-1"]
+    assert targets[0]["is_current"] is True
+    assert (
+        assignments.reassign_part(scan["scan_id"], targets[1]["set_id"])["reassigned"]
+        is True
+    )
+    assert inventory.get_inventory("A-1")[0]["quantity_found"] == 0
+    assert inventory.get_inventory("B-1")[0]["quantity_found"] == 1
+    assert assignments.list_history()[0]["assigned_set_num"] == "B-1"
+    database.close()
+
+    restarted = Database(path)
+    restarted.initialize()
+    assert (
+        PartAssignmentService(restarted).list_history()[0]["assigned_set_num"] == "B-1"
+    )
+    restarted.close()

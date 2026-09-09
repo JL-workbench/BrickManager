@@ -286,6 +286,8 @@ class ScanScreen(Screen):
                         confidence=best.confidence,
                         delta_e=lego_color.delta_e,
                         lego_element_id=element_id,
+                        color_name=lego_color.name,
+                        image_path=self.selected_image_path,
                     )
                     if assignment["assigned"]:
                         lines.append(

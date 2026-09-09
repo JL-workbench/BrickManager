@@ -56,7 +56,7 @@ class BrickManagerApp(App):
                 assignment_service=self.part_assignment_service,
             )
         )
-        manager.add_widget(HistoryScreen(self.database))
+        manager.add_widget(HistoryScreen(self.part_assignment_service))
         navigation.screen_manager = manager
         root.add_widget(manager)
         self.screen_manager = manager

@@ -86,6 +86,18 @@ class Database:
     def initialize(self):
         db = self.connect()
         db.executescript(SCHEMA)
+        assignment_columns = {
+            row[1] for row in db.execute("PRAGMA table_info(part_assignments)")
+        }
+        for column, definition in (
+            ("color_name", "TEXT"),
+            ("lego_design_id", "TEXT"),
+            ("image_path", "TEXT"),
+        ):
+            if column not in assignment_columns:
+                db.execute(
+                    f"ALTER TABLE part_assignments ADD COLUMN {column} {definition}"
+                )
         db.execute("INSERT OR IGNORE INTO manufacturers(name) VALUES (?)", ("LEGO",))
         db.commit()
 

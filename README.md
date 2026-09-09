@@ -1,4 +1,4 @@
-# BrickManager v0.7
+# BrickManager v0.8
 
 Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots und Brickognize-Erkennung. Die Architektur bleibt weitgehend an v0.1 angelehnt.
 Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots, Brickognize-Erkennung, Bounding Box und Farbanalyse.
@@ -62,6 +62,21 @@ Beispielablauf:
     Set 2: 3001 Red -> 1/3
     Set 3: 3001 Red -> 0/2
     Ergebnis: neues Teil wird Set 2 zugeordnet, danach 2/3.
+
+## v0.8: History und manuelle Neu-Zuordnung
+
+Jeder erkannte Scan wird lokal in `part_assignments` gespeichert, auch wenn
+kein Set offenen Bedarf hat. Ein Eintrag enthält Scan-ID, Timestamp, Partnummer,
+Rebrickable-Color-ID und Farbname, optionale LEGO-Design-/Element-ID,
+Confidence, Delta E, Bildpfad sowie die aktuelle Set-Zuordnung.
+
+Die History zeigt die neuesten Scans zuerst. Der Button `Neu zuordnen` listet
+nur Sets, deren Inventar dieselbe Kombination aus `part_num` und `color_id`
+enthält. Auch vollständige Sets bleiben auswählbar und werden gekennzeichnet.
+`PartAssignmentService.reassign_part(scan_id, target_set_id)` verschiebt genau
+eine Einheit: im bisherigen Set wird sie abgezogen, im Zielset addiert, dann
+wird derselbe History-Eintrag auf das Zielset aktualisiert. Die Änderung ist
+atomar und bleibt nach dem Neustart erhalten.
 
 Die lokale Farbdatenbank liegt unter `data/lego_colors.json`. Eine Aktualisierung erfolgt
 explizit mit `REBRICKABLE_API_KEY=<key> python scripts/sync_lego_colors.py`; die normale
