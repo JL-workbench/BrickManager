@@ -15,12 +15,15 @@ Design Rule Check*
 *.APR_LIB
 
 # Visual Studio
+.vscode/
 Debug*
 Release*
 obj
 bin
 .vs
-.venv
+.venv/
+__pycache__/
+*.py[cod]
 
 # Flash Download Tool
 dl_temp
@@ -42,3 +45,10 @@ lockfile.lck
 # Gcode
 *.gcode
 *.nc
+
+# Project specific files
+data/*.db
+data/settings.json
+data/logs/
+*.log
+.idea/
