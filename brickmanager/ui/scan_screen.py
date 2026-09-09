@@ -19,6 +19,7 @@ from brickmanager.recognition.models import RecognitionResult
 from brickmanager.ui.camera_widget import CameraWidget
 from brickmanager.ui.roi_overlay import RoiOverlay
 from brickmanager.vision.image_processing import save_snapshot
+from brickmanager.vision.recognition_processing import enrich_recognition
 from config import SNAPSHOT_DIR
 
 
@@ -211,9 +212,10 @@ class ScanScreen(Screen):
 
     def _recognize_in_background(self, image_path):
         result = self.recognizer.identify_part(image_path)
-        Clock.schedule_once(lambda *_: self._display_recognition(result), 0)
+        result, debug_path = enrich_recognition(image_path, result)
+        Clock.schedule_once(lambda *_: self._display_recognition(result, debug_path), 0)
 
-    def _display_recognition(self, result: RecognitionResult):
+    def _display_recognition(self, result: RecognitionResult, debug_path=None):
         self.recognition_running = False
         if not result.success:
             self.status.text = f"Brickognize API-Fehler: {result.error}"
@@ -223,11 +225,24 @@ class ScanScreen(Screen):
             return
 
         best = result.best_match
+        if debug_path is not None:
+            self.selected_image_preview.source = str(debug_path)
+            self.selected_image_preview.reload()
         lines = [
             f"Part: {best.part_id or '-'}",
             f"Name: {best.name or '-'}",
             f"Confidence: {best.confidence:.2%}",
         ]
+        if best.bounding_box is not None:
+            box = best.bounding_box
+            lines.append(
+                f"Bounding Box: x={box.x:.0f}, y={box.y:.0f}, "
+                f"width={box.width:.0f}, height={box.height:.0f}"
+            )
+        else:
+            lines.append("Bounding Box: nicht verfügbar")
+        if best.color is not None:
+            lines.append(f"Farbe: RGB {best.color.rgb}, {best.color.hex}")
         if len(result.results) > 1:
             lines.append(
                 "Weitere Treffer: "

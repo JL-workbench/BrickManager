@@ -3,7 +3,7 @@ from pathlib import Path
 import requests
 
 from brickmanager.recognition.brickognize import BrickognizeRecognizer
-from brickmanager.recognition.models import BrickRecognition
+from brickmanager.recognition.models import BoundingBox, BrickRecognition
 
 
 class FakeResponse:
@@ -53,6 +53,36 @@ def test_parse_empty_response_is_successful_no_match():
     assert result.success is True
     assert result.results == []
     assert result.best_match is None
+
+
+def test_parse_response_preserves_bounding_box():
+    result = BrickognizeRecognizer.parse_response(
+        {
+            "bounding_box": {
+                "left": 125,
+                "upper": 80,
+                "right": 365,
+                "lower": 240,
+                "image_width": 768,
+                "image_height": 1024,
+                "score": 0.99,
+            },
+            "items": [{"id": "3001", "name": "Brick 2 x 4", "score": 0.94}],
+        }
+    )
+
+    assert result.best_match.bounding_box == BoundingBox(
+        125, 80, 240, 160, 768, 1024, 0.99
+    )
+
+
+def test_invalid_bounding_box_is_ignored():
+    result = BrickognizeRecognizer.parse_response(
+        {"bounding_box": {"left": 5, "upper": 5, "right": 2}, "items": []}
+    )
+
+    assert result.success is True
+    assert result.results == []
 
 
 def test_identify_part_uses_multipart_and_timeout(tmp_path):

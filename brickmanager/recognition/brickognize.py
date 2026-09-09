@@ -3,7 +3,11 @@ from pathlib import Path
 
 import requests
 
-from brickmanager.recognition.models import BrickRecognition, RecognitionResult
+from brickmanager.recognition.models import (
+    BoundingBox,
+    BrickRecognition,
+    RecognitionResult,
+)
 from brickmanager.recognition.recognizer import Recognizer
 
 DEFAULT_API_URL = "https://api.brickognize.com/predict/"
@@ -72,6 +76,7 @@ class BrickognizeRecognizer(Recognizer):
         if not isinstance(raw_items, list):
             raise ValueError("Trefferliste fehlt oder ist ungültig")
 
+        response_box = _parse_bounding_box(payload.get("bounding_box"))
         matches = []
         for item in raw_items:
             if not isinstance(item, dict):
@@ -86,6 +91,8 @@ class BrickognizeRecognizer(Recognizer):
                     part_id=_as_string(item.get("id", item.get("part_id"))),
                     name=_as_string(item.get("name")),
                     confidence=confidence,
+                    bounding_box=_parse_bounding_box(item.get("bounding_box"))
+                    or response_box,
                     category=_as_string(item.get("category")),
                     image_url=_as_string(item.get("img_url", item.get("image_url"))),
                 )
@@ -96,3 +103,35 @@ class BrickognizeRecognizer(Recognizer):
 
 def _as_string(value):
     return None if value is None else str(value)
+
+
+def _parse_bounding_box(value):
+    if not isinstance(value, dict):
+        return None
+    try:
+        left = float(value["left"])
+        upper = float(value["upper"])
+        right = float(value["right"])
+        lower = float(value["lower"])
+        image_width = float(value["image_width"])
+        image_height = float(value["image_height"])
+        score = float(value.get("score", 0.0))
+    except (KeyError, TypeError, ValueError):
+        return None
+    if (
+        image_width <= 0
+        or image_height <= 0
+        or right <= left
+        or lower <= upper
+        or min(left, upper, right, lower) < 0
+    ):
+        return None
+    return BoundingBox(
+        x=left,
+        y=upper,
+        width=right - left,
+        height=lower - upper,
+        image_width=image_width,
+        image_height=image_height,
+        score=score,
+    )

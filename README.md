@@ -1,8 +1,11 @@
 # BrickManager v0.4
+# BrickManager v0.5
 
 Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots und Brickognize-Erkennung. Die Architektur bleibt weitgehend an v0.1 angelehnt.
+Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots, Brickognize-Erkennung, Bounding Box und Farbanalyse.
 
 ## v0.4
+## v0.5
 - Kivy-Oberflaeche
 - Navigation: Setup, Sets, Scan, History
 - JSON-Einstellungen
@@ -19,8 +22,11 @@ Stabile Windows-Version mit Kamera-Integration, ROI-Auswahl, Snapshots und Brick
 - lokale Bilder auswählen und an Brickognize senden
 - mehrere Treffer mit Confidence auswerten
 - API- und Netzwerkfehler getrennt vom Ergebnis behandeln
+- Bounding Box aus der Brickognize-Antwort übernehmen und visualisieren
+- robuste RGB-/HEX-Farbanalyse innerhalb der Bounding Box
+- konfigurierbarer Innenrand für den Farbcrop
 
-Noch nicht enthalten: YOLO, Bounding Box, Farberkennung, AUTO-Scan und weitere Online-APIs.
+Noch nicht enthalten: YOLO, AUTO-Scan, Sortierlogik, Farbdatenbank und weitere Online-APIs.
 
 ## Installation Windows
 Empfohlen: Python 3.11.
