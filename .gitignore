@@ -1,0 +1,44 @@
+# Altium Project
+__Previews
+History
+Logs
+Status Report.Txt
+Project Logs*
+Project Outputs*
+Design Rule Check*
+*.log
+*.$$$
+*.lck
+
+*.apr
+*.REP
+*.APR_LIB
+
+# Visual Studio
+Debug*
+Release*
+obj
+bin
+.vs
+.venv
+
+# Flash Download Tool
+dl_temp
+logs
+
+# Autodesk Inventor
+OldVersions
+*.err
+lockfile.lck
+
+# Microsoft Office
+~$*
+
+# STM32 CubeIDE
+.metadata/
+.settings/
+*.launch
+
+# Gcode
+*.gcode
+*.nc
