@@ -2,6 +2,9 @@ import os
 
 import requests
 
+from config import REBRICKABLE_CACHE_FILE
+from brickmanager.services.rebrickable_cache_service import RebrickableCacheService
+
 
 REBRICKABLE_SET_URL = "https://rebrickable.com/api/v3/lego/sets/{set_num}/"
 REBRICKABLE_SET_PARTS_URL = "https://rebrickable.com/api/v3/lego/sets/{set_num}/parts/"
@@ -13,18 +16,26 @@ class SetInventoryError(RuntimeError):
 
 
 class RebrickableSetClient:
-    def __init__(self, session=None, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, session=None, timeout=DEFAULT_TIMEOUT, cache_service=None):
         self.session = session or requests.Session()
         self.timeout = timeout
+        self.cache_service = cache_service or RebrickableCacheService(
+            REBRICKABLE_CACHE_FILE,
+            min_request_interval=0 if session is not None else 1.0,
+        )
 
     def fetch_set_with_inventory(self, set_num, api_key=None):
         normalized_set_num = self._normalize_set_num(set_num)
+        cached_set = self.cache_service.get_set(normalized_set_num)
+        if cached_set is not None:
+            return cached_set
         api_key = api_key or os.getenv("REBRICKABLE_API_KEY")
         if not api_key:
             raise SetInventoryError("REBRICKABLE_API_KEY fehlt.")
         headers = {"Authorization": f"key {api_key}"}
         try:
-            set_response = self.session.get(
+            set_response = self.cache_service.request(
+                self.session,
                 REBRICKABLE_SET_URL.format(set_num=normalized_set_num),
                 headers=headers,
                 timeout=self.timeout,
@@ -48,13 +59,15 @@ class RebrickableSetClient:
 
         if not inventory:
             raise SetInventoryError("Das Set enthält kein Inventar.")
+        self.cache_service.save_set(normalized_set_num, set_data, inventory)
         return set_data, inventory
 
     def _fetch_inventory(self, set_num, headers):
         url = REBRICKABLE_SET_PARTS_URL.format(set_num=set_num)
         inventory = []
         while url:
-            response = self.session.get(
+            response = self.cache_service.request(
+                self.session,
                 url,
                 headers=headers,
                 params={"page_size": 1000},
@@ -382,7 +395,9 @@ class PartAssignmentService:
             if scan is None:
                 return {"reassigned": False, "reason": "scan_not_found"}
             target = database.execute(
-                """SELECT managed_set_inventory.id, managed_sets.set_num FROM managed_set_inventory
+                """SELECT managed_set_inventory.id, managed_sets.set_num,
+                managed_set_inventory.quantity_required, managed_set_inventory.quantity_found
+                FROM managed_set_inventory
                 JOIN managed_sets ON managed_sets.id = managed_set_inventory.set_id
                 WHERE managed_set_inventory.set_id = ? AND part_num = ? AND color_id = ?""",
                 (int(target_set_id), scan["part_num"], scan["color_id"]),
@@ -391,6 +406,8 @@ class PartAssignmentService:
                 return {"reassigned": False, "reason": "invalid_target"}
             if scan["set_id"] == target_set_id:
                 return {"reassigned": False, "reason": "already_assigned"}
+            if target["quantity_found"] >= target["quantity_required"]:
+                return {"reassigned": False, "reason": "no_remaining_demand"}
             if scan["inventory_item_id"] is not None:
                 database.execute(
                     "UPDATE managed_set_inventory SET quantity_found = MAX(quantity_found - 1, 0) WHERE id = ?",

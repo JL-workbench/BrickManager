@@ -4,6 +4,7 @@ from brickmanager.services.set_inventory import (
     RebrickableSetClient,
     SetInventoryService,
 )
+from brickmanager.services.rebrickable_cache_service import RebrickableCacheService
 
 
 class FakeResponse:
@@ -62,7 +63,13 @@ def test_rebrickable_set_import_loads_paginated_part_color_inventory(tmp_path):
     database.initialize()
     session = FakeSetSession()
     service = SetInventoryService(
-        database, client=RebrickableSetClient(session=session)
+        database,
+        client=RebrickableSetClient(
+            session=session,
+            cache_service=RebrickableCacheService(
+                tmp_path / "rebrickable_cache.db", min_request_interval=0
+            ),
+        ),
     )
 
     result = service.add_set("10303", api_key="secret")
@@ -292,3 +299,26 @@ def test_reassign_moves_exactly_one_history_part_and_persists(tmp_path):
         PartAssignmentService(restarted).list_history()[0]["assigned_set_num"] == "B-1"
     )
     restarted.close()
+
+
+def test_reassign_rejects_a_target_with_no_remaining_demand(tmp_path):
+    database = Database(tmp_path / "sets.db")
+    database.initialize()
+    inventory = SetInventoryService(database)
+    for set_num in ("A-1", "B-1"):
+        inventory.store_set(
+            {"set_num": set_num, "name": set_num},
+            [{"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 1}],
+        )
+    assignments = PartAssignmentService(database)
+    first_scan = assignments.assign_part("3001", 4, color_name="Red")
+    second_scan = assignments.assign_part("3001", 4, color_name="Red")
+    target = assignments.get_reassignment_targets(second_scan["scan_id"])[0]
+
+    result = assignments.reassign_part(second_scan["scan_id"], target["set_id"])
+
+    assert first_scan["set_num"] == "A-1"
+    assert result == {"reassigned": False, "reason": "no_remaining_demand"}
+    assert inventory.get_inventory("A-1")[0]["quantity_found"] == 1
+    assert inventory.get_inventory("B-1")[0]["quantity_found"] == 1
+    database.close()

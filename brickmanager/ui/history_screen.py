@@ -80,6 +80,10 @@ class HistoryScreen(Screen):
                 text=f"{target['set_num']} {target['name']}\n{target['quantity_found']} / {target['quantity_required']} {status}".strip(),
                 size_hint_y=None,
                 height=dp(62),
+                disabled=(
+                    not target["is_current"]
+                    and target["quantity_found"] >= target["quantity_required"]
+                ),
             )
             button.bind(
                 on_release=lambda _, set_id=target["set_id"]: (

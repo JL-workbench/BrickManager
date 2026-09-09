@@ -78,6 +78,28 @@ eine Einheit: im bisherigen Set wird sie abgezogen, im Zielset addiert, dann
 wird derselbe History-Eintrag auf das Zielset aktualisiert. Die Änderung ist
 atomar und bleibt nach dem Neustart erhalten.
 
+## v0.8: Lokaler Rebrickable-Cache
+
+Rebrickable-Farben, Part-Farbvarianten einschließlich Element-IDs sowie
+heruntergeladene Setdaten und Inventare liegen dauerhaft in
+`data/rebrickable_cache.db`. Die Cache-Struktur enthält eine
+`schema_version` und wird beim nächsten App-Start nicht erneut von der API
+geladen. Bei einem Cache-Hit arbeitet die App auch offline weiter.
+
+Die vorhandene Farberkennung verwendet den Cache zuerst. Erst bei einem
+unbekannten Part ruft sie `/api/v3/lego/parts/{part_num}/colors/` ab und
+speichert die aufgelösten RGB- und Element-Daten. Der globale Katalog aus
+`/api/v3/lego/colors/` wird nach dem ersten Abruf vollständig gespeichert.
+Set-Metadaten und Inventare werden über dieselbe Cache-Datei vor einem Abruf
+von `/api/v3/lego/sets/{set_num}/` und `/parts/` geprüft.
+
+`RebrickableCacheService` protokolliert Hits und Misses auf Debug-Level,
+schreibt keinen API-Key in Logs oder Datenbank und hält zwischen API-Anfragen
+derselben Cache-Datei mindestens eine Sekunde Abstand. HTTP 429 wird genau
+einmal nach diesem Abstand erneut versucht. Für eine spätere Wartungsaktion
+kann `RebrickableCacheService.clear()` alle Rebrickable-Daten löschen; ein
+erneuter Bedarf lädt sie anschließend wieder von der API.
+
 Die lokale Farbdatenbank liegt unter `data/lego_colors.json`. Eine Aktualisierung erfolgt
 explizit mit `REBRICKABLE_API_KEY=<key> python scripts/sync_lego_colors.py`; die normale
 Farberkennung verwendet ausschließlich die lokale Datei.

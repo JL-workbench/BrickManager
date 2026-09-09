@@ -6,6 +6,8 @@ from pathlib import Path
 
 import requests
 
+from brickmanager.services.rebrickable_cache_service import RebrickableCacheService
+
 
 REBRICKABLE_COLORS_URL = "https://rebrickable.com/api/v3/lego/colors/"
 REBRICKABLE_PART_COLORS_URL = (
@@ -38,10 +40,14 @@ class LegoColor:
 
 
 class ColorDatabase:
-    def __init__(self, path, session=None, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, path, session=None, timeout=DEFAULT_TIMEOUT, cache_service=None):
         self.path = Path(path)
         self.session = session or requests.Session()
         self.timeout = timeout
+        self.cache_service = cache_service or RebrickableCacheService(
+            self.path.parent / "rebrickable_cache.db",
+            min_request_interval=0 if session is not None else 1.0,
+        )
         self.colors = []
         self.part_cache = {}
         self.part_cache_path = self.path.parent / "rebrickable_part_colors.json"
@@ -115,18 +121,24 @@ class ColorDatabase:
 
     def fetch_part_colors(self, part_num, api_key=None, force_refresh=False):
         part_key = str(part_num)
+        if not force_refresh:
+            cached_colors = self.cache_service.get_part_colors(part_key)
+            if cached_colors:
+                return cached_colors
         if (
             not force_refresh
             and part_key in self.part_cache
             and self._cache_has_element_ids(self.part_cache[part_key])
         ):
+            self.cache_service.save_part_colors(part_key, self.part_cache[part_key])
             return list(self.part_cache[part_key])
 
         api_key = api_key or os.getenv("REBRICKABLE_API_KEY")
         headers = {"Authorization": f"key {api_key}"} if api_key else {}
         url = REBRICKABLE_PART_COLORS_URL.format(part_num=part_key)
         try:
-            response = self.session.get(
+            response = self.cache_service.request(
+                self.session,
                 url,
                 headers=headers,
                 params={"page_size": 1000},
@@ -160,6 +172,7 @@ class ColorDatabase:
 
             self.part_cache[part_key] = mapped_colors
             self._save_part_cache()
+            self.cache_service.save_part_colors(part_key, mapped_colors)
             return list(mapped_colors)
         except requests.HTTPError as exc:
             status = getattr(exc.response, "status_code", None)
@@ -198,9 +211,14 @@ class ColorDatabase:
         if not color_ids:
             return []
         unique_ids = sorted({int(value) for value in color_ids if value is not None})
+        cached_colors = self.cache_service.get_colors(unique_ids)
+        cached_by_id = {color["color_id"]: color for color in cached_colors}
+        if len(cached_by_id) == len(unique_ids):
+            return [cached_by_id[color_id] for color_id in unique_ids]
         color_url = REBRICKABLE_COLORS_URL
         try:
-            color_response = self.session.get(
+            color_response = self.cache_service.request(
+                self.session,
                 color_url,
                 headers=headers,
                 params={"page_size": 1000},
@@ -224,6 +242,7 @@ class ColorDatabase:
             for item in catalog
             if item.get("id", item.get("color_id")) is not None
         }
+        self.cache_service.save_colors(color_map.values())
 
         colors = []
         for color_id in unique_ids:
@@ -251,7 +270,8 @@ class ColorDatabase:
                 part_num=str(part_num), color_id=color_id
             )
             try:
-                response = self.session.get(
+                response = self.cache_service.request(
+                    self.session,
                     url,
                     headers=headers,
                     params={"page_size": 1000},

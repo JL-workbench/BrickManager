@@ -14,8 +14,11 @@ from brickmanager.ui.setup_screen import SetupScreen
 from brickmanager.recognition.brickognize import BrickognizeRecognizer
 from brickmanager.services.set_inventory import (
     PartAssignmentService,
+    RebrickableSetClient,
     SetInventoryService,
 )
+from brickmanager.services.rebrickable_cache_service import RebrickableCacheService
+from config import REBRICKABLE_CACHE_FILE
 from brickmanager.vision.camera import OpenCVCamera
 
 
@@ -34,7 +37,11 @@ class BrickManagerApp(App):
         self.database.initialize()
         self.camera_factory = OpenCVCamera
         self.recognizer = BrickognizeRecognizer()
-        self.set_inventory_service = SetInventoryService(self.database)
+        self.rebrickable_cache_service = RebrickableCacheService(REBRICKABLE_CACHE_FILE)
+        self.set_inventory_service = SetInventoryService(
+            self.database,
+            client=RebrickableSetClient(cache_service=self.rebrickable_cache_service),
+        )
         self.part_assignment_service = PartAssignmentService(self.database)
 
     def build(self):
@@ -68,4 +75,5 @@ class BrickManagerApp(App):
                 if hasattr(screen, "stop_camera"):
                     screen.stop_camera()
         self.settings.save()
+        self.rebrickable_cache_service.close()
         self.database.close()

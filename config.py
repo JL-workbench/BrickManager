@@ -10,6 +10,7 @@ SETTINGS_FILE = DATA_DIR / "settings.json"
 DATABASE_FILE = DATA_DIR / "brickmanager.db"
 SNAPSHOT_DIR = DATA_DIR / "snapshots"
 LEGO_COLORS_FILE = DATA_DIR / "lego_colors.json"
+REBRICKABLE_CACHE_FILE = DATA_DIR / "rebrickable_cache.db"
 
 DEFAULT_SETTINGS = {
     "camera_index": 0,
