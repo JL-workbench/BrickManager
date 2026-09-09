@@ -5,13 +5,16 @@ from pathlib import Path
 import cv2
 
 from brickmanager.recognition.models import RecognitionResult
+from brickmanager.services.lego_color_detector import (
+    detect_lego_color,
+    detect_part_color,
+)
 from brickmanager.vision.color_detection import (
     BACKGROUND_DIFF_THRESHOLD,
     analyze_color,
     analyze_color_with_reference,
     crop_bounding_box,
 )
-from brickmanager.services.lego_color_detector import detect_lego_color
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +48,13 @@ def enrich_recognition(
         )
     if color is not None:
         try:
-            lego_color = detect_lego_color(color.rgb)[0]
-        except (OSError, ValueError, RuntimeError, IndexError):
+            part_num = best.part_id
+            if part_num:
+                matches = detect_part_color(part_num, color.rgb)
+                lego_color = matches[0] if matches else None
+            else:
+                lego_color = detect_lego_color(color.rgb)[0]
+        except (OSError, ValueError, RuntimeError, IndexError, TypeError):
             lego_color = None
         results = [
             replace(item, color=color, lego_color=lego_color) if item is best else item

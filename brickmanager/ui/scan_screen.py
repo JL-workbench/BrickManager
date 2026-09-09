@@ -262,7 +262,14 @@ class ScanScreen(Screen):
         if best.color is not None:
             lines.append(f"Farbe: RGB {best.color.rgb}, {best.color.hex}")
         if best.lego_color is not None:
-            lines.append(f"LEGO-Farbe: {best.lego_color.name}")
+            lego_color = best.lego_color
+            lines.append(f"LEGO-Farbe: {lego_color.name} (ID: {lego_color.color_id})")
+            element_id = getattr(lego_color, "element_id", None)
+            element_ids = getattr(lego_color, "element_ids", ())
+            all_element_ids = list(
+                dict.fromkeys(filter(None, (element_id, *element_ids)))
+            )
+            lines.append(f"LEGO Element-ID: {', '.join(all_element_ids) or '?'}")
         if result.color_error is not None:
             lines.append(f"Farbanalyse: {result.color_error}")
         if len(result.results) > 1:

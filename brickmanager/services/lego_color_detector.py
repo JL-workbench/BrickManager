@@ -2,7 +2,10 @@ import math
 from dataclasses import dataclass
 
 from config import LEGO_COLORS_FILE
-from brickmanager.services.lego_color_database import ColorDatabase
+from brickmanager.services.lego_color_database import (
+    COLOR_MAX_DELTA_E,
+    ColorDatabase,
+)
 
 
 @dataclass(frozen=True)
@@ -14,6 +17,14 @@ class LegoColorMatch:
     delta_e: float
     confidence: float
     is_trans: bool
+    uncertain: bool = False
+
+
+@dataclass(frozen=True)
+class PartColorMatch(LegoColorMatch):
+    part_num: str | None = None
+    element_id: str | None = None
+    element_ids: tuple[str, ...] = ()
 
 
 class LegoColorDetector:
@@ -33,6 +44,42 @@ class LegoColorDetector:
         matches.sort(key=lambda match: match.delta_e)
         return matches[: max(1, int(top_n))]
 
+    def detect_part_color(
+        self,
+        part_num,
+        rgb,
+        top_n=1,
+        include_transparent=False,
+        force_refresh=False,
+    ):
+        detected_rgb = _validate_rgb(rgb)
+        part_candidates = self.database.get_part_color_candidates(
+            part_num,
+            detected_rgb,
+            top_n=top_n,
+            include_transparent=include_transparent,
+            force_refresh=force_refresh,
+        )
+        if isinstance(part_candidates, dict):
+            return []
+        matches = [
+            PartColorMatch(
+                color_id=item["color_id"],
+                name=item["name"],
+                rgb=item["rgb"],
+                detected_rgb=detected_rgb,
+                delta_e=item["delta_e"],
+                confidence=item["confidence"],
+                is_trans=item["is_trans"],
+                uncertain=item.get("uncertain", False),
+                part_num=str(part_num),
+                element_id=item.get("element_id"),
+                element_ids=tuple(item.get("element_ids") or []),
+            )
+            for item in part_candidates
+        ]
+        return matches
+
     @staticmethod
     def _match(detected_rgb, color):
         delta_e = ciede2000(_rgb_to_lab(detected_rgb), _rgb_to_lab(color.rgb_tuple))
@@ -45,6 +92,7 @@ class LegoColorDetector:
             delta_e=round(delta_e, 4),
             confidence=round(confidence, 4),
             is_trans=color.is_trans,
+            uncertain=delta_e > COLOR_MAX_DELTA_E,
         )
 
 
@@ -52,6 +100,24 @@ def detect_lego_color(rgb, database=None, top_n=1, include_transparent=False):
     database = database or ColorDatabase(LEGO_COLORS_FILE)
     return LegoColorDetector(database).detect_lego_color(
         rgb, top_n=top_n, include_transparent=include_transparent
+    )
+
+
+def detect_part_color(
+    part_num,
+    rgb,
+    database=None,
+    top_n=1,
+    include_transparent=False,
+    force_refresh=False,
+):
+    database = database or ColorDatabase(LEGO_COLORS_FILE)
+    return LegoColorDetector(database).detect_part_color(
+        part_num,
+        rgb,
+        top_n=top_n,
+        include_transparent=include_transparent,
+        force_refresh=force_refresh,
     )
 
 
