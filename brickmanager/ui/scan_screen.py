@@ -1,22 +1,23 @@
-from datetime import datetime
-from pathlib import Path
 import threading
+from datetime import datetime, timezone
+from pathlib import Path
 
 from kivy.clock import Clock
 from kivy.metrics import dp
-from kivy.uix.filechooser import FileChooserListView
-from kivy.uix.popup import Popup
-
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.image import Image
 from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
+from kivy.uix.widget import Widget
 
-from brickmanager.ui.camera_widget import CameraWidget
-from brickmanager.ui.roi_overlay import RoiOverlay
 from brickmanager.recognition.brickognize import BrickognizeRecognizer
 from brickmanager.recognition.models import RecognitionResult
+from brickmanager.ui.camera_widget import CameraWidget
+from brickmanager.ui.roi_overlay import RoiOverlay
 from brickmanager.vision.image_processing import save_snapshot
 from config import SNAPSHOT_DIR
 
@@ -41,44 +42,86 @@ class ScanScreen(Screen):
         root.add_widget(
             Label(text="Scan", font_size=dp(26), size_hint_y=None, height=dp(45))
         )
-        preview = FloatLayout()
-        preview.add_widget(self.camera_widget)
-        preview.add_widget(self.roi_overlay)
+        controls = BoxLayout(
+            orientation="horizontal", spacing=dp(8), size_hint_y=None, height=dp(162)
+        )
+        left_controls = BoxLayout(orientation="vertical", size_hint_x=0.5)
+        roi_actions = BoxLayout(
+            orientation="vertical", size_hint_y=None, height=dp(104), spacing=dp(6)
+        )
+        save_roi = Button(text="ROI speichern", size_hint_y=None, height=dp(49))
+        save_roi.bind(on_release=self.save_roi)
+        reset_roi = Button(text="ROI zurücksetzen", size_hint_y=None, height=dp(49))
+        reset_roi.bind(on_release=self.reset_roi)
+        roi_actions.add_widget(save_roi)
+        roi_actions.add_widget(reset_roi)
+        left_controls.add_widget(roi_actions)
+        controls.add_widget(left_controls)
+
+        right_controls = BoxLayout(orientation="vertical", size_hint_x=0.5)
+        recognition_actions = BoxLayout(
+            orientation="vertical", size_hint_y=None, height=dp(162), spacing=dp(6)
+        )
+        snapshot = Button(text="Snapshot", size_hint_y=None, height=dp(50))
+        snapshot.bind(on_release=self.take_snapshot)
+        snapshot_and_recognize = Button(
+            text="Snapshot und erkennen", size_hint_y=None, height=dp(50)
+        )
+        snapshot_and_recognize.bind(on_release=self.snapshot_and_recognize)
+        choose_image = Button(
+            text="Bild auswählen und erkennen", size_hint_y=None, height=dp(50)
+        )
+        choose_image.bind(on_release=self.choose_image)
+        recognition_actions.add_widget(snapshot)
+        recognition_actions.add_widget(snapshot_and_recognize)
+        recognition_actions.add_widget(choose_image)
+        right_controls.add_widget(recognition_actions)
+        controls.add_widget(right_controls)
+        root.add_widget(controls)
+
+        image_row = BoxLayout(orientation="horizontal", spacing=dp(8))
+        live_preview = FloatLayout(size_hint_x=0.5)
+        live_preview.add_widget(self.camera_widget)
+        live_preview.add_widget(self.roi_overlay)
+        image_row.add_widget(live_preview)
+
+        self.selected_image_preview = Image(
+            allow_stretch=True,
+            keep_ratio=True,
+            size_hint_x=0.5,
+        )
+        image_row.add_widget(self.selected_image_preview)
+        root.add_widget(image_row)
+
+        image_info = BoxLayout(
+            orientation="horizontal", spacing=dp(8), size_hint_y=None
+        )
+        image_info.add_widget(Widget(size_hint_x=0.5))
+        self.image_label = Label(
+            text="Kein Bild ausgewählt.",
+            size_hint_y=None,
+            height=dp(44),
+            size_hint_x=0.5,
+            halign="left",
+            valign="middle",
+        )
+        self.image_label.bind(size=self._update_image_label_text_size)
+        image_info.add_widget(self.image_label)
+        root.add_widget(image_info)
         self.camera_widget.bind(
             pos=self._update_roi_display_rect,
             size=self._update_roi_display_rect,
             texture_size=self._update_roi_display_rect,
         )
-        root.add_widget(preview)
-        actions = BoxLayout(size_hint_y=None, height=dp(45), spacing=dp(8))
-        save_roi = Button(text="ROI speichern")
-        save_roi.bind(on_release=self.save_roi)
-        reset_roi = Button(text="ROI zurücksetzen")
-        reset_roi.bind(on_release=self.reset_roi)
-        snapshot = Button(text="Snapshot aufnehmen")
-        snapshot.bind(on_release=self.take_snapshot)
-        actions.add_widget(save_roi)
-        actions.add_widget(reset_roi)
-        actions.add_widget(snapshot)
-        root.add_widget(actions)
-        recognition_actions = BoxLayout(size_hint_y=None, height=dp(45), spacing=dp(8))
-        choose_image = Button(text="Bild auswählen")
-        choose_image.bind(on_release=self.choose_image)
-        recognize = Button(text="Brick erkennen")
-        recognize.bind(on_release=self.recognize_image)
-        recognition_actions.add_widget(choose_image)
-        recognition_actions.add_widget(recognize)
-        root.add_widget(recognition_actions)
-        self.image_label = Label(
-            text="Kein Bild ausgewählt.", size_hint_y=None, height=dp(28)
-        )
-        root.add_widget(self.image_label)
         self.status = Label(text="Bereit.")
         root.add_widget(self.status)
         self.add_widget(root)
 
     def _set_status(self, message):
         self.status.text = message
+
+    def _update_image_label_text_size(self, *_):
+        self.image_label.text_size = self.image_label.size
 
     def _roi_changed(self, roi):
         self.current_roi = dict(roi)
@@ -100,16 +143,27 @@ class ScanScreen(Screen):
         frame = self.camera_widget.get_latest_frame()
         if frame is None:
             self.status.text = "Noch kein Kamerabild verfügbar."
-            return
-        filename = SNAPSHOT_DIR / f"snapshot_{datetime.now():%Y%m%d_%H%M%S}.jpg"
+            return None
+        filename = (
+            SNAPSHOT_DIR / f"snapshot_{datetime.now(timezone.utc):%Y%m%d_%H%M%S}.jpg"
+        )
         if save_snapshot(
             frame, filename, self.camera_widget.rotation, self.current_roi
         ):
-            self.selected_image_path = filename
-            self.image_label.text = f"Bild: {filename.name}"
-            self.status.text = f"Snapshot gespeichert: {filename.name}"
+            self._set_selected_image(filename)
+            self.image_label.text = (
+                f"Bild: {filename.name}\nSnapshot gespeichert: {filename.name}"
+            )
+            self.status.text = "Snapshot bereit."
+            return filename
         else:
             self.status.text = "Snapshot konnte nicht gespeichert werden."
+            return None
+
+    def snapshot_and_recognize(self, *_):
+        image_path = self.take_snapshot()
+        if image_path is not None:
+            self._start_recognition(image_path)
 
     def choose_image(self, *_):
         chooser = FileChooserListView(
@@ -125,25 +179,38 @@ class ScanScreen(Screen):
 
     def _select_image(self, popup, selection):
         if selection:
-            self.selected_image_path = Path(selection[0])
-            self.image_label.text = f"Bild: {self.selected_image_path.name}"
-            self.status.text = "Bild ausgewählt."
+            image_path = Path(selection[0])
+            self._set_selected_image(image_path)
             popup.dismiss()
+            self._start_recognition(image_path)
 
-    def recognize_image(self, *_):
+    def _set_selected_image(self, image_path):
+        self.selected_image_path = Path(image_path)
+        self.selected_image_preview.source = str(self.selected_image_path)
+        self.selected_image_preview.reload()
+        self.image_label.text = f"Bild: {self.selected_image_path.name}"
+
+    def _start_recognition(self, image_path):
         if self.recognition_running:
-            return
-        if self.selected_image_path is None:
-            self.status.text = "Bitte zuerst ein Bild auswählen."
             return
 
         self.recognition_running = True
         self.status.text = "Brickognize-Erkennung läuft..."
-        thread = threading.Thread(target=self._recognize_in_background, daemon=True)
+        thread = threading.Thread(
+            target=self._recognize_in_background,
+            args=(Path(image_path),),
+            daemon=True,
+        )
         thread.start()
 
-    def _recognize_in_background(self):
-        result = self.recognizer.identify_part(self.selected_image_path)
+    def recognize_image(self, *_):
+        if self.selected_image_path is None:
+            self.status.text = "Bitte zuerst ein Bild auswählen."
+            return
+        self._start_recognition(self.selected_image_path)
+
+    def _recognize_in_background(self, image_path):
+        result = self.recognizer.identify_part(image_path)
         Clock.schedule_once(lambda *_: self._display_recognition(result), 0)
 
     def _display_recognition(self, result: RecognitionResult):
