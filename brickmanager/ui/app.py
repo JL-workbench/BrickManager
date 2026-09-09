@@ -12,6 +12,10 @@ from brickmanager.ui.scan_screen import ScanScreen
 from brickmanager.ui.sets_screen import SetsScreen
 from brickmanager.ui.setup_screen import SetupScreen
 from brickmanager.recognition.brickognize import BrickognizeRecognizer
+from brickmanager.services.set_inventory import (
+    PartAssignmentService,
+    SetInventoryService,
+)
 from brickmanager.vision.camera import OpenCVCamera
 
 
@@ -30,6 +34,8 @@ class BrickManagerApp(App):
         self.database.initialize()
         self.camera_factory = OpenCVCamera
         self.recognizer = BrickognizeRecognizer()
+        self.set_inventory_service = SetInventoryService(self.database)
+        self.part_assignment_service = PartAssignmentService(self.database)
 
     def build(self):
         root = RootLayout(orientation="vertical")
@@ -39,12 +45,15 @@ class BrickManagerApp(App):
         manager.add_widget(
             SetupScreen(self.settings, camera_factory=self.camera_factory)
         )
-        manager.add_widget(SetsScreen(self.database))
+        manager.add_widget(
+            SetsScreen(self.set_inventory_service, self.part_assignment_service)
+        )
         manager.add_widget(
             ScanScreen(
                 self.settings,
                 camera_factory=self.camera_factory,
                 recognizer=self.recognizer,
+                assignment_service=self.part_assignment_service,
             )
         )
         manager.add_widget(HistoryScreen(self.database))

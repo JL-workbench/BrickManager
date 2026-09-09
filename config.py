@@ -1,7 +1,7 @@
 from pathlib import Path
 
 APP_NAME = "BrickManager"
-APP_VERSION = "0.5.1"
+APP_VERSION = "0.7"
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"

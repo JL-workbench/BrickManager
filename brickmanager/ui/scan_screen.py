@@ -26,10 +26,18 @@ from config import SNAPSHOT_DIR
 
 
 class ScanScreen(Screen):
-    def __init__(self, settings, camera_factory=None, recognizer=None, **kwargs):
+    def __init__(
+        self,
+        settings,
+        camera_factory=None,
+        recognizer=None,
+        assignment_service=None,
+        **kwargs,
+    ):
         super().__init__(name="scan", **kwargs)
         self.settings = settings
         self.recognizer = recognizer or BrickognizeRecognizer()
+        self.assignment_service = assignment_service
         self.selected_image_path = None
         self.recognition_running = False
         self.background_reference = None
@@ -270,6 +278,23 @@ class ScanScreen(Screen):
                 dict.fromkeys(filter(None, (element_id, *element_ids)))
             )
             lines.append(f"LEGO Element-ID: {', '.join(all_element_ids) or '?'}")
+            if self.assignment_service is not None and best.part_id:
+                try:
+                    assignment = self.assignment_service.assign_part(
+                        best.part_id,
+                        lego_color.color_id,
+                        confidence=best.confidence,
+                        delta_e=lego_color.delta_e,
+                        lego_element_id=element_id,
+                    )
+                    if assignment["assigned"]:
+                        lines.append(
+                            f"Zuordnung: {best.part_id} - {lego_color.name} -> Set {assignment['set_num']}"
+                        )
+                    else:
+                        lines.append("Zuordnung: Kein Bedarf in den aktiven Sets")
+                except (OSError, RuntimeError, TypeError, ValueError):
+                    lines.append("Zuordnung: nicht verfügbar")
         if result.color_error is not None:
             lines.append(f"Farbanalyse: {result.color_error}")
         if len(result.results) > 1:

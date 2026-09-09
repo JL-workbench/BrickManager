@@ -1,10 +1,15 @@
-Ziel von v0.5.1 ist die stabile Windows-Kamera-Integration mit ROI, Snapshot, gekapselter Brickognize-Erkennung, Bounding Box und hintergrundgestützter Farbanalyse.
+Ziel von v0.7 ist die stabile Windows-Kamera-Integration mit ROI, Snapshot,
+gekapselter Brickognize-Erkennung, Bounding Box, hintergrundgestützter
+Farbanalyse sowie lokaler Set- und Inventarverwaltung.
 
 # AGENTS.md
 
 ## Projektziel
 
-BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen. Ziel von v0.4 ist die stabile Windows-Kamera-Integration mit ROI, Snapshot und gekapselter Brickognize-Erkennung.
+BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen.
+v0.7 verwaltet Rebrickable-Sets und ihre Inventare lokal. Automatische
+Zuordnung erfolgt ausschließlich über Rebrickable-Partnummer plus
+Rebrickable-Color-ID und immer in der gespeicherten Set-Prioritätsreihenfolge.
 
 ## Grundregeln
 
@@ -17,7 +22,12 @@ BrickManager ist eine Kivy-Anwendung zur Verwaltung und Sortierung von Bauteilen
 - Die vorhandene JSON-Konfiguration bleibt erhalten. Mindestens `camera_index` und `rotation` werden weiter verwendet.
 - Die Rotation bleibt im Bildverarbeitungs-/Render-Pfad und wird nicht in das Kamera-Backend eingebaut.
 - Keine YOLO-, AUTO-Scan- oder Inventar-Funktionen in v0.4. Brickognize bleibt ausschließlich in der Recognition-Schicht.
-- Keine YOLO-, AUTO-Scan-, Sortier- oder Inventar-Funktionen in v0.5.1. Brickognize bleibt ausschließlich in der Recognition-Schicht; Farbanalyse nutzt nur dessen Bounding Box und die beim ROI-Bestätigen erzeugte Hintergrundreferenz.
+- Keine YOLO- oder AUTO-Scan-Funktionen. Brickognize bleibt ausschließlich in
+	der Recognition-Schicht; Farbanalyse nutzt nur dessen Bounding Box und die
+	beim ROI-Bestätigen erzeugte Hintergrundreferenz.
+- Set- und Inventarlogik gehören in Services, nicht in die GUI.
+- Die Prioritätsreihenfolge darf nie durch Setnummer, Alphabet oder Restmenge
+	ersetzt werden.
 - Keine unnötige Neuorganisation oder große Umstrukturierung.
 - Fehler werden sauber in der GUI angezeigt und dürfen keine Abstürze verursachen.
 

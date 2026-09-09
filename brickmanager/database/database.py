@@ -34,7 +34,42 @@ CREATE TABLE IF NOT EXISTS history (
  assigned_set_id INTEGER, accepted INTEGER NOT NULL DEFAULT 0,
  FOREIGN KEY(manufacturer_id) REFERENCES manufacturers(id),
  FOREIGN KEY(brick_id) REFERENCES bricks(id), FOREIGN KEY(assigned_set_id) REFERENCES sets(id));
+CREATE TABLE IF NOT EXISTS managed_sets (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ set_num TEXT NOT NULL UNIQUE,
+ name TEXT NOT NULL,
+ set_image_url TEXT,
+ priority INTEGER NOT NULL UNIQUE,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS managed_set_inventory (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ set_id INTEGER NOT NULL,
+ part_num TEXT NOT NULL,
+ color_id INTEGER NOT NULL,
+ color_name TEXT NOT NULL,
+ quantity_required INTEGER NOT NULL CHECK(quantity_required >= 0),
+ quantity_found INTEGER NOT NULL DEFAULT 0 CHECK(quantity_found >= 0),
+ part_image_url TEXT,
+ lego_design_id TEXT,
+ lego_element_id TEXT,
+ UNIQUE(set_id, part_num, color_id),
+ FOREIGN KEY(set_id) REFERENCES managed_sets(id) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS part_assignments (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ assigned_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ part_num TEXT NOT NULL,
+ color_id INTEGER NOT NULL,
+ set_id INTEGER,
+ inventory_item_id INTEGER,
+ confidence REAL,
+ delta_e REAL,
+ lego_element_id TEXT,
+ undone INTEGER NOT NULL DEFAULT 0,
+ FOREIGN KEY(set_id) REFERENCES managed_sets(id),
+ FOREIGN KEY(inventory_item_id) REFERENCES managed_set_inventory(id));
 """
+
 
 class Database:
     def __init__(self, path=DATABASE_FILE):
