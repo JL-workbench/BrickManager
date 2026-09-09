@@ -43,6 +43,28 @@ class SetupScreen(Screen):
         grid.add_widget(Label(text="ROI"))
         grid.add_widget(Label(text="Gesamtes Bild"))
         root.add_widget(grid)
+        auto_scan_row = BoxLayout(size_hint_y=None, height=dp(38), spacing=dp(8))
+        self.auto_scan_checkbox = CheckBox(
+            active=settings.get("auto_scan_enabled", False)
+        )
+        self.auto_scan_checkbox.bind(active=self._save_auto_scan_enabled)
+        auto_scan_row.add_widget(self.auto_scan_checkbox)
+        auto_scan_row.add_widget(Label(text="Auto-Scan aktivieren"))
+        interval_down = Button(text="−", size_hint_x=None, width=dp(42))
+        interval_down.bind(on_release=lambda *_: self._change_auto_scan_interval(-1))
+        auto_scan_row.add_widget(interval_down)
+        self.auto_scan_interval = Label(
+            text=self._format_auto_scan_interval(
+                settings.get("auto_scan_interval", 2.0)
+            ),
+            size_hint_x=None,
+            width=dp(62),
+        )
+        auto_scan_row.add_widget(self.auto_scan_interval)
+        interval_up = Button(text="+", size_hint_x=None, width=dp(42))
+        interval_up.bind(on_release=lambda *_: self._change_auto_scan_interval(1))
+        auto_scan_row.add_widget(interval_up)
+        root.add_widget(auto_scan_row)
         filter_row = BoxLayout(size_hint_y=None, height=dp(38), spacing=dp(8))
         self.all_colors_checkbox = CheckBox(
             active=not settings.get("color_filter_enabled", False)
@@ -123,6 +145,11 @@ class SetupScreen(Screen):
                 raise ValueError
             self.settings.set("camera_index", camera_index)
             self.settings.set("rotation", rotation)
+            self.settings.set("auto_scan_enabled", self.auto_scan_checkbox.active)
+            self.settings.set(
+                "auto_scan_interval",
+                self._auto_scan_interval_seconds(),
+            )
             self.settings.set(
                 "color_filter_enabled", not self.all_colors_checkbox.active
             )
@@ -132,6 +159,23 @@ class SetupScreen(Screen):
             self.status.text = "Einstellungen gespeichert."
         except ValueError:
             self.status.text = "Ungueltige Einstellung."
+
+    def _save_auto_scan_enabled(self, _, enabled):
+        self.settings.set("auto_scan_enabled", bool(enabled))
+        self.settings.save()
+
+    @staticmethod
+    def _format_auto_scan_interval(interval):
+        return f"{float(interval):.1f} s"
+
+    def _auto_scan_interval_seconds(self):
+        return float(self.auto_scan_interval.text.replace(" s", ""))
+
+    def _change_auto_scan_interval(self, delta):
+        interval = max(0.5, self._auto_scan_interval_seconds() + float(delta))
+        self.auto_scan_interval.text = self._format_auto_scan_interval(interval)
+        self.settings.set("auto_scan_interval", interval)
+        self.settings.save()
 
     def show_color_selection(self, *_):
         try:

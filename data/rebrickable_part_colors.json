@@ -1515,5 +1515,674 @@
       ],
       "element_id": "4242405"
     }
+  ],
+  "3003": [
+    {
+      "color_id": 0,
+      "name": "Black",
+      "rgb": "05131D",
+      "is_trans": false,
+      "element_ids": [
+        "300326",
+        "4103587"
+      ],
+      "element_id": "300326"
+    },
+    {
+      "color_id": 1,
+      "name": "Blue",
+      "rgb": "0055BF",
+      "is_trans": false,
+      "element_ids": [
+        "300323",
+        "300373",
+        "4103589"
+      ],
+      "element_id": "300323"
+    },
+    {
+      "color_id": 2,
+      "name": "Green",
+      "rgb": "237841",
+      "is_trans": false,
+      "element_ids": [
+        "300328"
+      ],
+      "element_id": "300328"
+    },
+    {
+      "color_id": 3,
+      "name": "Dark Turquoise",
+      "rgb": "008F9B",
+      "is_trans": false,
+      "element_ids": [
+        "4120399",
+        "6314091"
+      ],
+      "element_id": "4120399"
+    },
+    {
+      "color_id": 4,
+      "name": "Red",
+      "rgb": "C91A09",
+      "is_trans": false,
+      "element_ids": [
+        "300321",
+        "300371",
+        "4103590"
+      ],
+      "element_id": "300321"
+    },
+    {
+      "color_id": 5,
+      "name": "Dark Pink",
+      "rgb": "C870A0",
+      "is_trans": false,
+      "element_ids": [
+        "4245306",
+        "4251571",
+        "4497170",
+        "4517992"
+      ],
+      "element_id": "4245306"
+    },
+    {
+      "color_id": 6,
+      "name": "Brown",
+      "rgb": "583927",
+      "is_trans": false,
+      "element_ids": [
+        "300325",
+        "4140745"
+      ],
+      "element_id": "300325"
+    },
+    {
+      "color_id": 7,
+      "name": "Light Gray",
+      "rgb": "9BA19D",
+      "is_trans": false,
+      "element_ids": [
+        "300302",
+        "300352",
+        "4103591"
+      ],
+      "element_id": "300302"
+    },
+    {
+      "color_id": 8,
+      "name": "Dark Gray",
+      "rgb": "6D6E5C",
+      "is_trans": false,
+      "element_ids": [
+        "300327",
+        "4110008"
+      ],
+      "element_id": "300327"
+    },
+    {
+      "color_id": 10,
+      "name": "Bright Green",
+      "rgb": "4B9F4A",
+      "is_trans": false,
+      "element_ids": [
+        "4177587",
+        "4209117",
+        "6442896"
+      ],
+      "element_id": "4177587"
+    },
+    {
+      "color_id": 13,
+      "name": "Pink",
+      "rgb": "FC97AC",
+      "is_trans": false,
+      "element_ids": [
+        "4130302"
+      ],
+      "element_id": "4130302"
+    },
+    {
+      "color_id": 14,
+      "name": "Yellow",
+      "rgb": "F2CD37",
+      "is_trans": false,
+      "element_ids": [
+        "300324",
+        "300374",
+        "4103588"
+      ],
+      "element_id": "300324"
+    },
+    {
+      "color_id": 15,
+      "name": "White",
+      "rgb": "FFFFFF",
+      "is_trans": false,
+      "element_ids": [
+        "300301",
+        "4103592",
+        "6548256",
+        "6552095"
+      ],
+      "element_id": "300301"
+    },
+    {
+      "color_id": 18,
+      "name": "Light Yellow",
+      "rgb": "FBE696",
+      "is_trans": false,
+      "element_ids": [
+        "300303"
+      ],
+      "element_id": "300303"
+    },
+    {
+      "color_id": 19,
+      "name": "Tan",
+      "rgb": "E4CD9E",
+      "is_trans": false,
+      "element_ids": [
+        "300305",
+        "4114306"
+      ],
+      "element_id": "300305"
+    },
+    {
+      "color_id": 20,
+      "name": "Light Violet",
+      "rgb": "C9CAE2",
+      "is_trans": false,
+      "element_ids": [
+        "4159006"
+      ],
+      "element_id": "4159006"
+    },
+    {
+      "color_id": 22,
+      "name": "Purple",
+      "rgb": "81007B",
+      "is_trans": false,
+      "element_ids": [
+        "4133552",
+        "4165649"
+      ],
+      "element_id": "4133552"
+    },
+    {
+      "color_id": 25,
+      "name": "Orange",
+      "rgb": "FE8A18",
+      "is_trans": false,
+      "element_ids": [
+        "4119643",
+        "4153825"
+      ],
+      "element_id": "4119643"
+    },
+    {
+      "color_id": 26,
+      "name": "Magenta",
+      "rgb": "923978",
+      "is_trans": false,
+      "element_ids": [
+        "4206357",
+        "4655730"
+      ],
+      "element_id": "4206357"
+    },
+    {
+      "color_id": 27,
+      "name": "Lime",
+      "rgb": "BBE90B",
+      "is_trans": false,
+      "element_ids": [
+        "4122451",
+        "4220632"
+      ],
+      "element_id": "4122451"
+    },
+    {
+      "color_id": 28,
+      "name": "Dark Tan",
+      "rgb": "958A73",
+      "is_trans": false,
+      "element_ids": [
+        "4255416",
+        "4497068"
+      ],
+      "element_id": "4255416"
+    },
+    {
+      "color_id": 29,
+      "name": "Bright Pink",
+      "rgb": "E4ADC8",
+      "is_trans": false,
+      "element_ids": [
+        "4245307",
+        "4550359"
+      ],
+      "element_id": "4245307"
+    },
+    {
+      "color_id": 30,
+      "name": "Medium Lavender",
+      "rgb": "AC78BA",
+      "is_trans": false,
+      "element_ids": [
+        "6070321",
+        "6545844"
+      ],
+      "element_id": "6070321"
+    },
+    {
+      "color_id": 31,
+      "name": "Lavender",
+      "rgb": "E1D5ED",
+      "is_trans": false,
+      "element_ids": [
+        "6099349",
+        "6099350"
+      ],
+      "element_id": "6099349"
+    },
+    {
+      "color_id": 69,
+      "name": "Light Purple",
+      "rgb": "CD6298",
+      "is_trans": false,
+      "element_ids": [
+        "4250056"
+      ],
+      "element_id": "4250056"
+    },
+    {
+      "color_id": 70,
+      "name": "Reddish Brown",
+      "rgb": "582A12",
+      "is_trans": false,
+      "element_ids": [
+        "4211210"
+      ],
+      "element_id": "4211210"
+    },
+    {
+      "color_id": 71,
+      "name": "Light Bluish Gray",
+      "rgb": "A0A5A9",
+      "is_trans": false,
+      "element_ids": [
+        "4211387"
+      ],
+      "element_id": "4211387"
+    },
+    {
+      "color_id": 72,
+      "name": "Dark Bluish Gray",
+      "rgb": "6C6E68",
+      "is_trans": false,
+      "element_ids": [
+        "4211060"
+      ],
+      "element_id": "4211060"
+    },
+    {
+      "color_id": 73,
+      "name": "Medium Blue",
+      "rgb": "5A93DB",
+      "is_trans": false,
+      "element_ids": [
+        "4162705",
+        "4201235",
+        "4205047"
+      ],
+      "element_id": "4162705"
+    },
+    {
+      "color_id": 78,
+      "name": "Light Nougat",
+      "rgb": "F6D7B3",
+      "is_trans": false,
+      "element_ids": [
+        "4496972",
+        "6297283"
+      ],
+      "element_id": "4496972"
+    },
+    {
+      "color_id": 82,
+      "name": "Metallic Gold",
+      "rgb": "DBAC34",
+      "is_trans": false,
+      "element_ids": [
+        "4521993",
+        "6051567"
+      ],
+      "element_id": "4521993"
+    },
+    {
+      "color_id": 84,
+      "name": "Medium Nougat",
+      "rgb": "AA7D55",
+      "is_trans": false,
+      "element_ids": [
+        "4645062",
+        "6058085"
+      ],
+      "element_id": "4645062"
+    },
+    {
+      "color_id": 85,
+      "name": "Dark Purple",
+      "rgb": "3F3691",
+      "is_trans": false,
+      "element_ids": [
+        "4225125",
+        "4589613",
+        "4653960"
+      ],
+      "element_id": "4225125"
+    },
+    {
+      "color_id": 86,
+      "name": "Light Brown",
+      "rgb": "7C503A",
+      "is_trans": false,
+      "element_ids": [
+        "4497002"
+      ],
+      "element_id": "4497002"
+    },
+    {
+      "color_id": 112,
+      "name": "Medium Bluish Violet",
+      "rgb": "6874CA",
+      "is_trans": false,
+      "element_ids": [
+        "4130311"
+      ],
+      "element_id": "4130311"
+    },
+    {
+      "color_id": 125,
+      "name": "Light Orange",
+      "rgb": "F9BA61",
+      "is_trans": false,
+      "element_ids": [
+        "4119666"
+      ],
+      "element_id": "4119666"
+    },
+    {
+      "color_id": 135,
+      "name": "Pearl Light Gray",
+      "rgb": "9CA3A8",
+      "is_trans": false,
+      "element_ids": [
+        "4133530"
+      ],
+      "element_id": "4133530"
+    },
+    {
+      "color_id": 158,
+      "name": "Yellowish Green",
+      "rgb": "DFEEA5",
+      "is_trans": false,
+      "element_ids": [
+        "6088538",
+        "6544543"
+      ],
+      "element_id": "6088538"
+    },
+    {
+      "color_id": 191,
+      "name": "Bright Light Orange",
+      "rgb": "F8BB3D",
+      "is_trans": false,
+      "element_ids": [
+        "4645051",
+        "6295078"
+      ],
+      "element_id": "4645051"
+    },
+    {
+      "color_id": 212,
+      "name": "Bright Light Blue",
+      "rgb": "9FC3E9",
+      "is_trans": false,
+      "element_ids": [
+        "6014093"
+      ],
+      "element_id": "6014093"
+    },
+    {
+      "color_id": 226,
+      "name": "Bright Light Yellow",
+      "rgb": "FFF03A",
+      "is_trans": false,
+      "element_ids": [
+        "6212064"
+      ],
+      "element_id": "6212064"
+    },
+    {
+      "color_id": 272,
+      "name": "Dark Blue",
+      "rgb": "0A3463",
+      "is_trans": false,
+      "element_ids": [
+        "4264580",
+        "4296785"
+      ],
+      "element_id": "4264580"
+    },
+    {
+      "color_id": 288,
+      "name": "Dark Green",
+      "rgb": "184632",
+      "is_trans": false,
+      "element_ids": [
+        "4266895",
+        "4271436",
+        "6214611"
+      ],
+      "element_id": "4266895"
+    },
+    {
+      "color_id": 297,
+      "name": "Pearl Gold",
+      "rgb": "AA7F2E",
+      "is_trans": false,
+      "element_ids": [
+        "6162889"
+      ],
+      "element_id": "6162889"
+    },
+    {
+      "color_id": 308,
+      "name": "Dark Brown",
+      "rgb": "352100",
+      "is_trans": false,
+      "element_ids": [
+        "4623773",
+        "6014520",
+        "6092677"
+      ],
+      "element_id": "4623773"
+    },
+    {
+      "color_id": 313,
+      "name": "Maersk Blue",
+      "rgb": "3592C3",
+      "is_trans": false,
+      "element_ids": [],
+      "element_id": null
+    },
+    {
+      "color_id": 320,
+      "name": "Dark Red",
+      "rgb": "720E0F",
+      "is_trans": false,
+      "element_ids": [
+        "4249697",
+        "4249850",
+        "4539104"
+      ],
+      "element_id": "4249697"
+    },
+    {
+      "color_id": 321,
+      "name": "Dark Azure",
+      "rgb": "078BC9",
+      "is_trans": false,
+      "element_ids": [
+        "6089775",
+        "6609904"
+      ],
+      "element_id": "6089775"
+    },
+    {
+      "color_id": 322,
+      "name": "Medium Azure",
+      "rgb": "36AEBF",
+      "is_trans": false,
+      "element_ids": [
+        "4653970",
+        "6603316"
+      ],
+      "element_id": "4653970"
+    },
+    {
+      "color_id": 323,
+      "name": "Light Aqua",
+      "rgb": "ADC3C0",
+      "is_trans": false,
+      "element_ids": [
+        "6088594",
+        "6426720"
+      ],
+      "element_id": "6088594"
+    },
+    {
+      "color_id": 335,
+      "name": "Sand Red",
+      "rgb": "D67572",
+      "is_trans": false,
+      "element_ids": [
+        "4166634"
+      ],
+      "element_id": "4166634"
+    },
+    {
+      "color_id": 351,
+      "name": "Medium Dark Pink",
+      "rgb": "F785B1",
+      "is_trans": false,
+      "element_ids": [
+        "300322"
+      ],
+      "element_id": "300322"
+    },
+    {
+      "color_id": 378,
+      "name": "Sand Green",
+      "rgb": "A0BCAC",
+      "is_trans": false,
+      "element_ids": [
+        "4155059",
+        "4517511",
+        "4642424",
+        "6075624"
+      ],
+      "element_id": "4155059"
+    },
+    {
+      "color_id": 379,
+      "name": "Sand Blue",
+      "rgb": "6074A1",
+      "is_trans": false,
+      "element_ids": [
+        "4196738",
+        "6506825"
+      ],
+      "element_id": "4196738"
+    },
+    {
+      "color_id": 462,
+      "name": "Medium Orange",
+      "rgb": "FFA70B",
+      "is_trans": false,
+      "element_ids": [
+        "4130353",
+        "4167477"
+      ],
+      "element_id": "4130353"
+    },
+    {
+      "color_id": 484,
+      "name": "Dark Orange",
+      "rgb": "A95500",
+      "is_trans": false,
+      "element_ids": [
+        "4122460",
+        "4164440",
+        "4597486",
+        "6212081"
+      ],
+      "element_id": "4122460"
+    },
+    {
+      "color_id": 1050,
+      "name": "Coral",
+      "rgb": "FF698F",
+      "is_trans": false,
+      "element_ids": [
+        "6422920"
+      ],
+      "element_id": "6422920"
+    },
+    {
+      "color_id": 1051,
+      "name": "Pastel Blue",
+      "rgb": "5AC4DA",
+      "is_trans": false,
+      "element_ids": [
+        "300311",
+        "4161341",
+        "4250613",
+        "4585678"
+      ],
+      "element_id": "300311"
+    },
+    {
+      "color_id": 1062,
+      "name": "Vibrant Yellow",
+      "rgb": "EBD800",
+      "is_trans": false,
+      "element_ids": [
+        "6427903"
+      ],
+      "element_id": "6427903"
+    },
+    {
+      "color_id": 1091,
+      "name": "Warm Yellowish Orange",
+      "rgb": "FFCB78",
+      "is_trans": false,
+      "element_ids": [
+        "4243869"
+      ],
+      "element_id": "4243869"
+    },
+    {
+      "color_id": 1136,
+      "name": "Reddish Orange",
+      "rgb": "CA4C0B",
+      "is_trans": false,
+      "element_ids": [
+        "6543345"
+      ],
+      "element_id": "6543345"
+    }
   ]
 }

@@ -11,6 +11,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.progressbar import ProgressBar
 from kivy.uix.screenmanager import Screen
 from kivy.uix.widget import Widget
 
@@ -20,10 +21,15 @@ from brickmanager.ui.camera_widget import CameraWidget
 from brickmanager.ui.roi_overlay import RoiOverlay
 from brickmanager.vision.image_processing import save_snapshot
 from brickmanager.vision.image_processing import prepare_snapshot_frame
-from brickmanager.vision.color_detection import create_background_reference
+from brickmanager.vision.color_detection import (
+    create_background_reference,
+    load_background_reference,
+    save_background_reference,
+)
 from brickmanager.vision.recognition_processing import enrich_recognition
+from brickmanager.vision.auto_scan import AutoScanController, AutoScanState
 from brickmanager.services.color_filter import color_is_visible, sort_filtered_parts
-from config import SNAPSHOT_DIR
+from config import BACKGROUND_REFERENCE_FILE, SNAPSHOT_DIR
 
 
 class ScanScreen(Screen):
@@ -42,6 +48,10 @@ class ScanScreen(Screen):
         self.selected_image_path = None
         self.recognition_running = False
         self.background_reference = None
+        self.auto_scan_controller = AutoScanController()
+        self._auto_scan_event = None
+        self._auto_scan_progress_event = None
+        self._auto_scan_elapsed = 0.0
         self.camera_widget = CameraWidget(
             camera_factory=camera_factory, size_hint=(1, 1)
         )
@@ -128,6 +138,17 @@ class ScanScreen(Screen):
         )
         self.status = Label(text="Bereit.")
         root.add_widget(self.status)
+        self.auto_scan_progress = ProgressBar(
+            max=1.0, value=0, size_hint_y=None, height=dp(16)
+        )
+        self.auto_scan_progress.opacity = 0
+        root.add_widget(self.auto_scan_progress)
+        self.auto_scan_progress_label = Label(
+            text="", size_hint_y=None, height=dp(22)
+        )
+        root.add_widget(self.auto_scan_progress_label)
+        self.auto_scan_status = Label(text="", size_hint_y=None, height=dp(24))
+        root.add_widget(self.auto_scan_status)
         self.add_widget(root)
 
     def _set_status(self, message):
@@ -158,7 +179,11 @@ class ScanScreen(Screen):
         if self.background_reference is None:
             self.status.text = "Referenzbild konnte nicht aufgenommen werden."
             return
+        if not save_background_reference(self.background_reference, BACKGROUND_REFERENCE_FILE):
+            self.status.text = "Referenzbild konnte nicht gespeichert werden."
+            return
         self.status.text = "Referenzbild aufgenommen. LEGO-Teil analysierbar."
+        self._start_auto_scan()
 
     def reset_roi(self, *_):
         self.current_roi = {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}
@@ -229,6 +254,102 @@ class ScanScreen(Screen):
         )
         thread.start()
 
+    def _start_auto_scan(self):
+        self._stop_auto_scan()
+        if not self.settings.get("auto_scan_enabled", False):
+            return
+        if self.background_reference is None or self.camera_widget.camera is None:
+            if self.background_reference is None:
+                self.auto_scan_status.text = (
+                    "Auto-Scan wartet: Leeren ROI anzeigen und 'ROI speichern' drücken."
+                )
+            else:
+                self.auto_scan_status.text = "Auto-Scan wartet auf die Kamera."
+            return
+        interval = float(self.settings.get("auto_scan_interval", 2.0))
+        self.auto_scan_controller.reset()
+        self._auto_scan_elapsed = 0.0
+        self.auto_scan_progress.max = interval
+        self.auto_scan_progress.value = 0
+        self.auto_scan_progress.opacity = 1
+        self.auto_scan_progress_label.text = (
+            f"Nächste Prüfung: 0.0 / {interval:.1f} s"
+        )
+        self.auto_scan_status.text = "Auto-Scan aktiv: Warte auf Bauteil ..."
+        self._auto_scan_event = Clock.schedule_interval(self._check_auto_scan, interval)
+        self._auto_scan_progress_event = Clock.schedule_interval(
+            self._update_auto_scan_progress, 0.05
+        )
+
+    def _stop_auto_scan(self):
+        for event_name in ("_auto_scan_event", "_auto_scan_progress_event"):
+            event = getattr(self, event_name, None)
+            if event is not None:
+                event.cancel()
+                setattr(self, event_name, None)
+        self.auto_scan_progress.opacity = 0
+        self.auto_scan_progress_label.text = ""
+        self.auto_scan_status.text = ""
+
+    def _update_auto_scan_progress(self, delta):
+        interval = float(self.settings.get("auto_scan_interval", 2.0))
+        if self.recognition_running:
+            return
+        self._auto_scan_elapsed = min(interval, self._auto_scan_elapsed + delta)
+        self.auto_scan_progress.value = self._auto_scan_elapsed
+        self.auto_scan_progress_label.text = (
+            f"Nächste Prüfung: {self._auto_scan_elapsed:.1f} / {interval:.1f} s"
+        )
+
+    def _check_auto_scan(self, _):
+        self._auto_scan_elapsed = 0.0
+        if self.recognition_running or self.background_reference is None:
+            return
+        frame = self.camera_widget.get_latest_frame()
+        if frame is None:
+            return
+        current_roi = prepare_snapshot_frame(
+            frame, self.camera_widget.rotation, self.current_roi
+        )
+        if self.auto_scan_controller.process_frame(
+            self.background_reference.image, current_roi, self.recognition_running
+        ):
+            self.auto_scan_status.text = "Bauteil erkannt. Scan wird durchgeführt ..."
+            filename = (
+                SNAPSHOT_DIR / f"auto_{datetime.now(timezone.utc):%Y%m%d_%H%M%S}.jpg"
+            )
+            if save_snapshot(
+                frame, filename, self.camera_widget.rotation, self.current_roi
+            ):
+                self._set_selected_image(filename)
+                self._start_recognition(filename)
+            else:
+                self.auto_scan_controller.scan_failed()
+                self.auto_scan_status.text = (
+                    "Auto-Scan: Snapshot fehlgeschlagen. Warte auf Entfernung ..."
+                )
+        elif self.auto_scan_controller.state == AutoScanState.SCANNING:
+            self.auto_scan_status.text = "Bauteil erkannt. Scan wird durchgefuehrt ..."
+        elif self.auto_scan_controller.state == AutoScanState.WAITING_FOR_REMOVAL:
+            self.auto_scan_status.text = (
+                "Bauteil liegt noch im ROI. Warte auf Entfernung ..."
+            )
+        else:
+            ratio = self.auto_scan_controller.last_changed_ratio * 100
+            minimum = self.auto_scan_controller.min_changed_ratio * 100
+            motion = self.auto_scan_controller.last_motion_ratio * 100
+            maximum_motion = self.auto_scan_controller.max_motion_ratio * 100
+            if ratio >= minimum and motion > maximum_motion:
+                self.auto_scan_status.text = (
+                    "Bauteilbewegung erkannt. Warte auf stabiles Bild ... "
+                    f"Bewegung: {motion:.1f}%"
+                )
+            else:
+                self.auto_scan_status.text = (
+                    "Auto-Scan aktiv: Warte auf Bauteil ... "
+                    f"ROI-Änderung: {ratio:.1f}% (Auslösung ab {minimum:.1f}%)"
+                )
+
     def recognize_image(self, *_):
         if self.selected_image_path is None:
             self.status.text = "Bitte zuerst ein Bild auswählen."
@@ -244,6 +365,7 @@ class ScanScreen(Screen):
 
     def _display_recognition(self, result: RecognitionResult, debug_path=None):
         self.recognition_running = False
+        self.auto_scan_controller.scan_completed()
         if not result.success:
             self.status.text = f"Brickognize API-Fehler: {result.error}"
             return
@@ -315,6 +437,8 @@ class ScanScreen(Screen):
                 )
             )
         self.status.text = "\n".join(lines)
+        if self.settings.get("auto_scan_enabled", False):
+            self.auto_scan_status.text = "Scan abgeschlossen. Warte auf Entfernung ..."
 
     def _show_filtered_color_notice(self, color_name):
         message = (
@@ -341,11 +465,15 @@ class ScanScreen(Screen):
             self.settings.get("camera_index", 0),
             self.settings.get("rotation", 0),
         )
+        self.background_reference = load_background_reference(BACKGROUND_REFERENCE_FILE)
+        self._start_auto_scan()
         return super().on_enter(*args)
 
     def on_leave(self, *args):
+        self._stop_auto_scan()
         self.stop_camera()
         return super().on_leave(*args)
 
     def stop_camera(self):
+        self._stop_auto_scan()
         self.camera_widget.stop()

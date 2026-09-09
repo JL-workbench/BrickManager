@@ -26,6 +26,25 @@ def create_background_reference(image):
     return BackgroundReference(image=image.copy())
 
 
+def save_background_reference(reference, path):
+    """Persist a captured empty ROI without exposing OpenCV to the UI layer."""
+    if reference is None or reference.image is None or reference.image.size == 0:
+        return False
+    return bool(cv2.imwrite(str(path), reference.image))
+
+
+def load_background_reference(path):
+    """Load the empty ROI captured during ROI configuration, if available."""
+    # cv2.imread logs a warning for a missing file. A missing reference is an
+    # expected first-run condition, not a camera or image-processing error.
+    from pathlib import Path
+
+    if not Path(path).is_file():
+        return None
+    image = cv2.imread(str(path), cv2.IMREAD_COLOR)
+    return create_background_reference(image)
+
+
 def difference_mask(reference, current, threshold=20):
     if reference is None or current is None:
         return None, None
