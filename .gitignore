@@ -50,5 +50,6 @@ lockfile.lck
 data/*.db
 data/settings.json
 data/logs/
+data/snapshots/
 *.log
 .idea/

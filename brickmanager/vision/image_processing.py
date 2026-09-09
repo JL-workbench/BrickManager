@@ -16,3 +16,15 @@ def prepare_frame_for_kivy(frame, rotation=0):
 
     rotated = rotate_image(frame, rotation)
     return cv2.cvtColor(rotated, cv2.COLOR_BGR2RGB)
+
+
+def save_snapshot(frame, path, rotation=0, roi=None):
+    if frame is None:
+        return False
+
+    snapshot = rotate_image(frame, rotation)
+    if roi is not None:
+        from brickmanager.vision.roi import apply_roi
+
+        snapshot = apply_roi(snapshot, roi)
+    return bool(cv2.imwrite(str(path), snapshot))

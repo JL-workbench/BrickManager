@@ -1,4 +1,3 @@
-import cv2
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
@@ -16,6 +15,7 @@ class CameraWidget(Image):
         self.rotation = 0
         self._update_event = None
         self.status_callback = None
+        self.latest_frame = None
         self.allow_stretch = True
         self.keep_ratio = True
 
@@ -51,7 +51,13 @@ class CameraWidget(Image):
             self._status(f"Kamera {self.camera_index} konnte keinen Frame lesen.")
             return
 
-        processed = prepare_frame_for_kivy(frame, self.rotation)
+        self.latest_frame = frame
+        try:
+            processed = prepare_frame_for_kivy(frame, self.rotation)
+        except Exception:
+            self.stop()
+            self._status(f"Kamera {self.camera_index} konnte nicht verarbeitet werden.")
+            return
         if processed is None:
             self.stop()
             self._status(f"Kamera {self.camera_index} konnte nicht verarbeitet werden.")
@@ -61,6 +67,7 @@ class CameraWidget(Image):
             size=(processed.shape[1], processed.shape[0]), colorfmt="rgb"
         )
         texture.blit_buffer(processed.tobytes(), colorfmt="rgb", bufferfmt="ubyte")
+        texture.flip_vertical()
         self.texture = texture
         self.texture_size = texture.size
 
@@ -71,6 +78,25 @@ class CameraWidget(Image):
         if self.camera is not None:
             self.camera.close()
             self.camera = None
+        self.latest_frame = None
+
+    def get_latest_frame(self):
+        return self.latest_frame.copy() if self.latest_frame is not None else None
+
+    def get_display_rect(self):
+        texture_width, texture_height = self.texture_size
+        if not texture_width or not texture_height or not self.width or not self.height:
+            return self.x, self.y, self.width, self.height
+
+        scale = min(self.width / texture_width, self.height / texture_height)
+        display_width = texture_width * scale
+        display_height = texture_height * scale
+        return (
+            self.x + (self.width - display_width) / 2,
+            self.y + (self.height - display_height) / 2,
+            display_width,
+            display_height,
+        )
 
     def on_touch_down(self, touch):
         return super().on_touch_down(touch)
