@@ -173,3 +173,42 @@ def test_reorder_and_undo_assignment_are_persistent(tmp_path):
     ]
     assert SetInventoryService(restarted).get_inventory("C-1")[0]["quantity_found"] == 0
     restarted.close()
+
+
+def test_inventory_is_sorted_by_color_and_found_quantity_can_be_adjusted(tmp_path):
+    database = Database(tmp_path / "sets.db")
+    database.initialize()
+    service = SetInventoryService(database)
+    service.store_set(
+        {"set_num": "A-1", "name": "Set A"},
+        [
+            {"part_num": "3002", "color_id": 7, "color_name": "Blue", "quantity": 1},
+            {"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 2},
+        ],
+    )
+
+    items = service.get_inventory("A-1")
+    increased = service.adjust_quantity_found(items[0]["id"], 1)
+    capped = service.adjust_quantity_found(items[0]["id"], 5)
+    decreased = service.adjust_quantity_found(items[0]["id"], -1)
+
+    assert [item["color_id"] for item in items] == [4, 7]
+    assert increased["quantity_found"] == 1
+    assert capped["quantity_found"] == 2
+    assert decreased["quantity_found"] == 1
+    database.close()
+
+
+def test_delete_set_removes_its_inventory(tmp_path):
+    database = Database(tmp_path / "sets.db")
+    database.initialize()
+    service = SetInventoryService(database)
+    service.store_set(
+        {"set_num": "A-1", "name": "Set A"},
+        [{"part_num": "3001", "color_id": 4, "color_name": "Red", "quantity": 1}],
+    )
+
+    assert service.delete_set("A-1") == {"deleted": True}
+    assert service.list_sets() == []
+    assert service.get_inventory("A-1") == []
+    database.close()

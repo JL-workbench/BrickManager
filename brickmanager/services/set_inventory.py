@@ -150,12 +150,45 @@ class SetInventoryService:
                 """SELECT managed_set_inventory.*, MAX(quantity_required - quantity_found, 0)
                 AS quantity_remaining FROM managed_set_inventory
                 JOIN managed_sets ON managed_sets.id = managed_set_inventory.set_id
-                WHERE managed_sets.set_num = ? ORDER BY part_num, color_id""",
+                WHERE managed_sets.set_num = ? ORDER BY color_id, part_num""",
                 (str(set_num),),
             )
             .fetchall()
         )
         return [dict(row) for row in rows]
+
+    def adjust_quantity_found(self, inventory_item_id, change):
+        database = self.database.connect()
+        with database:
+            item = database.execute(
+                """SELECT id, quantity_required, quantity_found FROM managed_set_inventory
+                WHERE id = ?""",
+                (int(inventory_item_id),),
+            ).fetchone()
+            if item is None:
+                raise SetInventoryError("Inventareintrag wurde nicht gefunden.")
+            quantity_found = max(
+                0, min(item["quantity_required"], item["quantity_found"] + int(change))
+            )
+            database.execute(
+                "UPDATE managed_set_inventory SET quantity_found = ? WHERE id = ?",
+                (quantity_found, item["id"]),
+            )
+        return {
+            "quantity_found": quantity_found,
+            "quantity_required": item["quantity_required"],
+            "quantity_remaining": item["quantity_required"] - quantity_found,
+        }
+
+    def delete_set(self, set_num):
+        database = self.database.connect()
+        with database:
+            cursor = database.execute(
+                "DELETE FROM managed_sets WHERE set_num = ?", (str(set_num),)
+            )
+            if cursor.rowcount == 0:
+                return {"deleted": False, "reason": "not_found"}
+        return {"deleted": True}
 
     def set_priority_order(self, set_numbers):
         rows = self.list_sets()
