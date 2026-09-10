@@ -17,7 +17,7 @@ fullscreen = 0
 
 android.permissions = CAMERA,INTERNET
 android.api = 33
-# android.sdk = 34
+android.sdk = 34
 android.ndk = 26.1.10909125
 android.accept_sdk_license = True
 android.archs = arm64-v8a
