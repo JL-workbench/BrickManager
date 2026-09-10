@@ -28,12 +28,13 @@ jobs:
         uses: android-actions/setup-android@v2
         with:
           api-levels: '33'
+          build-tools-version: '33.0.2'
           ndk-version: '25.1.8937393'
 
       - name: Verify Android build tools
         run: |
           export ANDROID_SDK_ROOT=$ANDROID_HOME
-          ls -la $ANDROID_HOME/build-tools/33.0.0/
+          ls -la $ANDROID_HOME/build-tools/33.0.2/
           which aidl || echo "AIDL not in PATH"
 
       - name: Restore Android build cache
