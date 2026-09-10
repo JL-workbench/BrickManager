@@ -9,7 +9,8 @@ source.exclude_dirs = .git,.github,.venv,.pytest_cache,tests,build,bin
 
 version = 0.9
 
-requirements = python3==3.10.11,kivy,numpy,requests,opencv-python
+requirements = python3==3.10.11,kivy,numpy,requests
+p4a_recipes = opencv
 
 orientation = landscape
 fullscreen = 0
