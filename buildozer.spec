@@ -14,9 +14,10 @@ fullscreen = 0
 
 android.permissions = CAMERA,INTERNET
 android.api = 33
-android.minapi = 24
-android.ndk = 25b
-android.archs = arm64-v8a
+android.sdk = 34
+android.ndk = 26.1.10909125
+android.accept_sdk_license = True
+android.arch = arm64-v8a
 # Python-for-Android auf die letzte stabile Version
 # mit Python 3.10 festlegen.
 p4a.branch = master
