@@ -69,7 +69,7 @@ jobs:
             automake
 
           python -m pip install --upgrade pip
-          python -m pip install buildozer==0.33 Cython==0.29.37
+          python -m pip install buildozer==1.5.0 Cython==0.29.37
 
       - name: Build ARM64 debug APK
         env:
