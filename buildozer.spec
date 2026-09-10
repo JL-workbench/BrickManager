@@ -9,7 +9,7 @@ source.exclude_dirs = .git,.github,.venv,.pytest_cache,tests,build,bin
 
 version = 0.9
 
-requirements = python3==3.10.11,kivy,numpy,requests,opencv
+requirements = python3==3.10.11,kivy,numpy,requests,opencv-python
 
 orientation = landscape
 fullscreen = 0
